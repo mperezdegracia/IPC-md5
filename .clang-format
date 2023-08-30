@@ -3,8 +3,9 @@ BasedOnStyle: Mozilla
 AlignConsecutiveDeclarations: 'false'
 AlignEscapedNewlines: Left
 AlignOperands: 'true'
+BreakBeforeBraces: Attach
 AllowShortBlocksOnASingleLine: 'true'
-AlwaysBreakAfterReturnType: AllDefinitions
+AlwaysBreakAfterReturnType: None
 AlwaysBreakBeforeMultilineStrings: 'false'
 AlwaysBreakTemplateDeclarations: 'Yes'
 BinPackArguments: 'false'
