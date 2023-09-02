@@ -19,7 +19,6 @@ main(int argc, char const* argv[]) {
 	do {
 		r = fgets(buffer, BUFFSIZE, stdin);
 		int n = strlen(buffer); 
-		buffer[n] = '\0';  
 
 
         fprintf(fptr,"%s \n",buffer);

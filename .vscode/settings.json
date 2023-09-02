@@ -4,6 +4,9 @@
         "wait.h": "c",
         "string.h": "c",
         "stdlib.h": "c",
-        "unistd.h": "c"
+        "unistd.h": "c",
+        "slavemanager.h": "c",
+        "cstdlib": "c",
+        "slave_manager.h": "c"
     }
 }
