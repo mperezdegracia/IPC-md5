@@ -11,15 +11,13 @@ void prepare_slave(int id, int pipes[SLAVES_NUM][2]);
 
 void create_pipes(int pipes[SLAVES_NUM][2]);
 
-int
-main(int argc, char const* argv[]) {
+int main(int argc, char* argv[]) {
 	if (argc <= 1) {
 		fprintf(stderr, "Uso: %s archivo1 archivo2 ...\n", argv[0]);
 	}
 
 	int FILES_NUM = argc - 1;
-
-	const char** FILE_PATHS = &argv[1];
+	char** FILE_PATHS = &argv[1];
 
 	//        slave_id |flow direction| R/W
 	int pipes[SLAVES_NUM][2];
@@ -48,8 +46,8 @@ main(int argc, char const* argv[]) {
 
 	return 0;
 }
-void
-prepare_slave(int id, int pipes[SLAVES_NUM][2]) {
+
+void prepare_slave(int id, int pipes[SLAVES_NUM][2]) {
 	printf("creating slave %d \n", id);
 	pid_t pid = fork();
 
@@ -67,8 +65,8 @@ prepare_slave(int id, int pipes[SLAVES_NUM][2]) {
 
 		printf("Ejecutando Slave \n");
 
-		char* slave[] = { "slave", buf, NULL };
-		char* env[] = { NULL };
+		char* slave[] = {"slave", buf, NULL};
+		char* env[] = {NULL};
 
 		execve("./slave", slave, NULL);
 
@@ -76,8 +74,8 @@ prepare_slave(int id, int pipes[SLAVES_NUM][2]) {
 		exit(EXIT_FAILURE);
 	}
 }
-void
-create_pipes(int pipes[SLAVES_NUM][2]) {
+
+void create_pipes(int pipes[SLAVES_NUM][2]) {
 	for (int i = 0; i < SLAVES_NUM; i++) {
 		/* code */
 		if ((pipe(pipes[i])) == -1) {
