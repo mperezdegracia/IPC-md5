@@ -12,7 +12,8 @@ DEBUG=false
 
 for i in $@; do
     case "$i" in
-        "-d") DEBUG=true;;
+        # "-d") DEBUG=true;;
+        "-d") print_error 'Flag "-d" not available yet';;
     esac
 done
 
@@ -32,4 +33,4 @@ docker ps | grep "$container_name" >/dev/null 2>&1 || docker start "$container_n
 
 # compile the code and run
 docker exec -u user -t "$container_name" \
-    /bin/bash -lc "make $makecmd"
+    /bin/bash -lc "cd /sources && make $makecmd"
