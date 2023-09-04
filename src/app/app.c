@@ -10,8 +10,7 @@
 #define SLAVES_QTY 1
 
 
-int
-main(int argc, char const* argv[]) {
+int main(int argc, char* argv[]) {
 	if (argc <= 1) {
 		fprintf(stderr, "Uso: %s archivo1 archivo2 ...\n", argv[0]);
 	}
