@@ -24,7 +24,7 @@ Para instalar `gitflow` simplemente se necesita usar el _package manager_ de la 
 **Para Ubuntu o Debian**
 
 ```bash
-# apt install git-flow
+$ apt install git-flow
 ```
 
 **Para Arch**
