@@ -5,26 +5,23 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#define BUFFSIZE 256
 
-#define BUFFSIZE 256 
-int
-main(int argc, char const* argv[]) {
-	char buffer[BUFFSIZE]; 
-	char * r; 
+int main(int argc, char const *argv[]) {
+	char buffer[BUFFSIZE];
+	char *r;
 
-    FILE *fptr;
+	FILE *fptr;
 
-    fptr = fopen("out.txt","w"); 
+	fptr = fopen("out.txt", "w");
 
 	do {
 		r = fgets(buffer, BUFFSIZE, stdin);
-		int n = strlen(buffer); 
+		int n = strlen(buffer);
 
+		fprintf(fptr, "%s \n", buffer);
 
-        fprintf(fptr,"%s \n",buffer);
-	
-
-	} while( r != NULL );
-    fclose(fptr);
-	return 0; 
+	} while (r != NULL);
+	fclose(fptr);
+	return 0;
 }

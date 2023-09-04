@@ -4,11 +4,10 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
 #include "slave_manager.h"
 
-
 #define SLAVES_QTY 1
-
 
 int main(int argc, char* argv[]) {
 	if (argc <= 1) {
@@ -19,15 +18,11 @@ int main(int argc, char* argv[]) {
 
 	const char** files = &argv[1];
 
-	
-    slave_managerADT sm = new_manager(files,files_qty, SLAVES_QTY);
+	slave_managerADT sm = new_manager(files, files_qty, SLAVES_QTY);
 
-    init_slaves(sm);
+	init_slaves(sm);
 
-    free_adt(sm);
-	
+	free_adt(sm);
+
 	return 0;
 }
-
-
-
