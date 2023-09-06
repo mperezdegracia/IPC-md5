@@ -9,19 +9,13 @@
 
 int main(int argc, char const *argv[]) {
 	char *r;
-
-	FILE *fptr;
-
-	fptr = fopen("out.txt", "w");
-
 	do {
 		char buffer[BUFFSIZE] = {0};
 		r = fgets(buffer, BUFFSIZE, stdin);
-		int n = strlen(buffer);
 
-		fprintf(fptr, "%s \n", buffer);
+		printf("%s \n", buffer);
+
 
 	} while (r != NULL);
-	fclose(fptr);
 	return 0;
 }
