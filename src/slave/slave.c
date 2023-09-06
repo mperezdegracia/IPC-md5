@@ -8,7 +8,6 @@
 #define BUFFSIZE 256
 
 int main(int argc, char const *argv[]) {
-	char buffer[BUFFSIZE];
 	char *r;
 
 	FILE *fptr;
@@ -16,6 +15,7 @@ int main(int argc, char const *argv[]) {
 	fptr = fopen("out.txt", "w");
 
 	do {
+		char buffer[BUFFSIZE] = {0};
 		r = fgets(buffer, BUFFSIZE, stdin);
 		int n = strlen(buffer);
 

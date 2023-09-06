@@ -2,11 +2,11 @@
 
 
 # Create a test folder if it doesn't exist
-mkdir -p test_files
+mkdir -p assets/bin/test_files
 
 # Create test files with predefined names
 for i in {1..10}; do
-    filename= "test_files/file$i.txt"
+    filename="assets/bin/test_files/file$i.txt"
     echo "This is a test file $i" > $filename
 done
 

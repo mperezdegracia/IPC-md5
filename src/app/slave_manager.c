@@ -127,7 +127,7 @@ init_slaves(slave_managerADT adt) {
 				dup2(sm[WRITE], STDOUT_FILENO);
 
 				char* argv[] = { "./slave", NULL };
-				execve("./slave", argv, NULL);
+				execve("./build/slave", argv, NULL);
 
 				break;
 			default:
