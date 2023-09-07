@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		while (fgets(output, sizeof(output), f) != NULL)
-			fprintf(stdout, "%s", output);
+			dprintf(STDOUT_FILENO, "%s", output);
 
 		pclose(f);
 	}

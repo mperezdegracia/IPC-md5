@@ -60,7 +60,7 @@ SlaveManager new_manager(char** filenames, int count, int qslaves) {
 	if (count < 1 || filenames == NULL)
 		error_exit("invalid parameters");
 
-	SlaveManager sm = calloc(1, sizeof(SlaveManager));
+	SlaveManager sm = calloc(1, sizeof(struct slave_manager_cdt));
 	if (sm == NULL)
 		error_exit("Memory allocation error [slave_manager]");
 
