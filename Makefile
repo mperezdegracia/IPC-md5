@@ -1,6 +1,7 @@
 CC=gcc
-CFLAGS=-Wall -pedantic
+CFLAGS=-Wall -pedantic -g
 CFLAGS+=-Iinclude
+LDFLAGS=-fsanitize=address
 
 SRC_APP=$(wildcard src/app/*.c)
 SRC_SLAVE=$(wildcard src/slave/*.c)
