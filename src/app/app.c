@@ -24,11 +24,10 @@ int main(int argc, char* argv[]) {
 
 	init_slaves(sm);
 
-	
 	sleep(3);
 
 	while (has_next_file(sm)) {
-		char buf[BUFFSIZE]={0};
+		char buf[BUFFSIZE] = {0};
 
 		ret_file(sm, buf);
 		printf("RESULT: %s \n", buf);
