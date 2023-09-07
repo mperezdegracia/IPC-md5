@@ -10,5 +10,6 @@
         "slave_manager.h": "c",
         "select.h": "c",
         "stdio.h": "c"
-    }
+    },
+    "editor.formatOnSave": true
 }

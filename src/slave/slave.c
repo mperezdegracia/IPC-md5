@@ -13,18 +13,18 @@
 int main(int argc, char const *argv[]) {
 	int read_data;
 	char buf[BUFFSIZE] = {0};
+
 	do {
-		
 		read_data = fscanf(stdin, "%s", buf);
 		sleep(1);
-		//printf("%s\n", buf);
+		// printf("%s\n", buf);
 		dprintf(STDOUT_FILENO, "%s\n", buf);
 		fflush(stdin);
 		/* code */
 	} while (read_data != EOF);
 
-		// fprintf(stderr, "%s\n", filename);
-		// dprintf(STDOUT_FILENO, "%s\n", filename);
+	// fprintf(stderr, "%s\n", filename);
+	// dprintf(STDOUT_FILENO, "%s\n", filename);
 
 	return 0;
 }
