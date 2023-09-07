@@ -1,6 +1,9 @@
+#define _GNU_SOURCE
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -8,20 +11,20 @@
 #define BUFFSIZE 256
 
 int main(int argc, char const *argv[]) {
-	char *r;
-
-	FILE *fptr;
-
-	fptr = fopen("out.txt", "w");
-
+	int read_data;
+	char buf[BUFFSIZE] = {0};
 	do {
-		char buffer[BUFFSIZE] = {0};
-		r = fgets(buffer, BUFFSIZE, stdin);
-		int n = strlen(buffer);
+		
+		read_data = fscanf(stdin, "%s", buf);
+		sleep(1);
+		//printf("%s\n", buf);
+		dprintf(STDOUT_FILENO, "%s\n", buf);
+		fflush(stdin);
+		/* code */
+	} while (read_data != EOF);
 
-		fprintf(fptr, "%s \n", buffer);
+		// fprintf(stderr, "%s\n", filename);
+		// dprintf(STDOUT_FILENO, "%s\n", filename);
 
-	} while (r != NULL);
-	fclose(fptr);
 	return 0;
 }

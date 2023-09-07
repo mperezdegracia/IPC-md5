@@ -7,6 +7,8 @@
         "unistd.h": "c",
         "slavemanager.h": "c",
         "cstdlib": "c",
-        "slave_manager.h": "c"
+        "slave_manager.h": "c",
+        "select.h": "c",
+        "stdio.h": "c"
     }
 }
