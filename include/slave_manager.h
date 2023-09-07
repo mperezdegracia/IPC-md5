@@ -10,18 +10,19 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#define CHILD 0
-#define READ 0
-#define WRITE 1
-#define ERROR -1
-#define MAXPATH 256
-#define BUFFSIZE 256 
+#define CHILD    0
+#define READ     0
+#define WRITE    1
+#define ERROR    -1
+#define MAXPATH  256
+#define BUFFSIZE 256
 
-typedef struct slave_managerCDT* slave_managerADT;
+typedef struct slave_manager_cdt* SlaveManager;
 
-slave_managerADT new_manager(const char** filenames, int count, int qslaves);
-void init_slaves(slave_managerADT adt);
-void free_adt(slave_managerADT adt);
-int has_next_file(slave_managerADT adt);
-int ret_file(slave_managerADT adt, char buf[BUFFSIZE]);
+SlaveManager new_manager(char** filenames, int count, int qslaves);
+void init_slaves(SlaveManager adt);
+void free_adt(SlaveManager adt);
+int has_next_file(SlaveManager adt);
+int ret_file(SlaveManager adt, char buf[BUFFSIZE]);
+
 #endif

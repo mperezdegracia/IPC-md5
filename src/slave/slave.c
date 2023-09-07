@@ -10,21 +10,26 @@
 
 #define BUFFSIZE 256
 
-int main(int argc, char const *argv[]) {
-	int read_data;
-	char buf[BUFFSIZE] = {0};
+int main(int argc, char *argv[]) {
+	FILE *f;
+	char command[BUFFSIZE] = {0};
+	char filepath[BUFFSIZE] = {0};
+	char output[BUFFSIZE] = {0};
 
-	do {
-		read_data = fscanf(stdin, "%s", buf);
-		sleep(1);
-		// printf("%s\n", buf);
-		dprintf(STDOUT_FILENO, "%s\n", buf);
-		fflush(stdin);
-		/* code */
-	} while (read_data != EOF);
+	while (fgets(filepath, sizeof(filepath), stdin) != NULL) {
+		sprintf(command, "md5sum %s", filepath);
+		f = popen(command, "r");
 
-	// fprintf(stderr, "%s\n", filename);
-	// dprintf(STDOUT_FILENO, "%s\n", filename);
+		if (f == NULL) {
+			perror("popen");
+			exit(1);
+		}
+
+		while (fgets(output, sizeof(output), f) != NULL)
+			dprintf(STDOUT_FILENO, "%s", output);
+
+		pclose(f);
+	}
 
 	return 0;
 }

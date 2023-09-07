@@ -9,33 +9,26 @@
 
 #define SLAVES_QTY  2
 #define OUTPUT_FILE "out_app.txt"
+
 int main(int argc, char* argv[]) {
-	if (argc <= 1) {
-		fprintf(stderr, "Uso: %s archivo1 archivo2 ...\n", argv[0]);
-	}
+	if (argc <= 1)
+		fprintf(stderr, "Usage: %s [FILES...]\n", argv[0]);
 
-	printf("starting \n");
-
-	int files_qty = argc - 1;
-
-	const char** files = (const char**)&argv[1];
-
-	slave_managerADT sm = new_manager(files, files_qty, SLAVES_QTY);
-
+	puts("starting");
+	SlaveManager sm = new_manager(argv + 1, argc - 1, SLAVES_QTY);
 	init_slaves(sm);
-
-	
 	sleep(3);
 
-	while (has_next_file(sm)) {
-		char buf[BUFFSIZE]={0};
+	char buf[BUFFSIZE] = {0};
 
+	while (has_next_file(sm)) {
 		ret_file(sm, buf);
-		printf("RESULT: %s \n", buf);
+		printf("RESULT: %s\n", buf);
 		sleep(1);
 	}
-	printf("\n FINISHED \n");
+
 	free_adt(sm);
+	puts("finished");
 
 	return 0;
 }
