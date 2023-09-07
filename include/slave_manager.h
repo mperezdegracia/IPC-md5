@@ -1,5 +1,5 @@
-#ifndef __SLAVE_MANAGER_ADT_H__
-#define __SLAVE_MANAGER_ADT_H__
+#ifndef __SLAVE_MANAGER_H__
+#define __SLAVE_MANAGER_H__
 
 /* Standard library */
 #include <stdio.h>
@@ -13,7 +13,6 @@
 #define CHILD    0
 #define READ     0
 #define WRITE    1
-#define ERROR    -1
 #define MAXPATH  256
 #define BUFFSIZE 256
 

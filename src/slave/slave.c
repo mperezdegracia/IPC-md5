@@ -1,3 +1,4 @@
+#include "utils.h"
 #define _GNU_SOURCE
 #include <fcntl.h>
 #include <stdio.h>
@@ -19,11 +20,8 @@ int main(int argc, char *argv[]) {
 	while (fgets(filepath, sizeof(filepath), stdin) != NULL) {
 		sprintf(command, "md5sum %s", filepath);
 		f = popen(command, "r");
-
-		if (f == NULL) {
-			perror("popen");
-			exit(1);
-		}
+		if (f == NULL)
+			error_exit("popen");
 
 		while (fgets(output, sizeof(output), f) != NULL)
 			dprintf(STDOUT_FILENO, "%s", output);
