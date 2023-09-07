@@ -15,7 +15,7 @@
 #define WRITE 1
 #define ERROR -1
 #define MAXPATH 256
-#define BUFFSIZE 256
+#define BUFFSIZE 256 
 
 typedef struct slave_managerCDT* slave_managerADT;
 

@@ -15,7 +15,6 @@ typedef struct slave_managerCDT {
 	int ret_files;
 	int max_fd;
 	int* has_data;
-	fd_set set;
 	/* data */
 } slave_managerCDT;
 
@@ -53,7 +52,6 @@ void free_adt(slave_managerADT adt) {
 	if (read_flag)
 		free(adt->fd_read);
 
-
 	free(adt);
 }
 slave_managerADT new_manager(const char** filenames, int count, int qslaves) {
@@ -74,8 +72,6 @@ slave_managerADT new_manager(const char** filenames, int count, int qslaves) {
 	sm->qfiles_sent = 0;
 
 	sm->av_files = 0;
-
-	FD_ZERO(&(sm->set));
 
 	sm->ret_files = 0;
 	sm->max_fd = 0;
@@ -121,8 +117,7 @@ void init_slaves(slave_managerADT adt) {
 		int ms[2];  // master to slave
 
 		if (pipe(sm) == -1 || pipe(ms) == -1) {
-			free_adt(adt);
-			error_exit("Pipe Error");
+			error_free_exit(adt, "Pipe Error");
 		}
 
 		int pid = fork();
@@ -130,8 +125,8 @@ void init_slaves(slave_managerADT adt) {
 		switch (pid) {
 			case ERROR:
 				/* code */
-				free_adt(adt);
-				error_exit("Fork Error");
+				error_free_exit(adt, "Fork Error");
+
 				break;
 			case CHILD:
 
@@ -142,9 +137,10 @@ void init_slaves(slave_managerADT adt) {
 				close_extra_pipes(i, adt);
 
 				dup2(ms[READ], STDIN_FILENO);
-				dup2(sm[WRITE], STDOUT_FILENO);
 				close(ms[READ]);
+				dup2(sm[WRITE], STDOUT_FILENO);
 				close(sm[WRITE]);
+
 				char* argv[] = {"./slave", NULL};
 				execve("./build/slave", argv, NULL);
 
@@ -162,10 +158,8 @@ void init_slaves(slave_managerADT adt) {
 				if (adt->fd_read[i] > adt->max_fd)
 					adt->max_fd = adt->fd_read[i];
 				adt->slave_pids[i] = pid;
+				printf("max_fd: %d | new fd_read[%d] = %d \n", adt->max_fd, i, adt->fd_read[i]);
 
-				send_file(adt, i);
-				send_file(adt, i);
-				send_file(adt, i);
 				send_file(adt, i);
 
 				break;
@@ -173,46 +167,38 @@ void init_slaves(slave_managerADT adt) {
 	}
 	printf("initialized slaves ! \n");
 }
+
 int has_next_file(slave_managerADT adt) {
 	return adt->qfiles > adt->ret_files;
 }
+
 int ret_file(slave_managerADT adt, char buf[BUFFSIZE]) {
-
-
-
 	if (buf == NULL || adt == NULL) {
 		error_free_exit(adt, "Invalid Parameters");
 	}
 
 	if (adt->av_files <= 0) {
-		// si no hay data disponible -> toca usar select y quedar bloqueado hasta que termine algún slave
+		fd_set set;
 
+		// si no hay data disponible -> toca usar select y quedar bloqueado hasta que termine algún slave
+		FD_ZERO(&set);
 
 		for (int i = 0; i < adt->qslaves; i++) {
-			FD_SET(adt->fd_read[i], &(adt->set));
+			FD_SET(adt->fd_read[i], &set);
 		}
 
-		printf("running select \n");
-		int q_fds = select(adt->max_fd + 1, &(adt->set), NULL, NULL, NULL);
-		printf("select finished\n");
+		int q_fds = select(adt->max_fd + 1, &set, NULL, NULL, NULL);
 
-		switch (q_fds) {
-			case ERROR: {
-				error_free_exit(adt, "ERROR in select()");
-			}
-			/* code */
-			break;
+		if (q_fds == ERROR) {
+			error_free_exit(adt, "ERROR in select()");
+		}
 
-			default: {
-				adt->av_files = q_fds;
+		adt->av_files = q_fds;
 
-				// update has_data
-				for (int i = 0; i < adt->qslaves; i++) {
-					if (FD_ISSET(adt->fd_read[i], &(adt->set))) {
-						adt->has_data[i] = 1;
-					}
-				}
-				break;
+		// update has_data
+		for (int i = 0; i < adt->qslaves; i++) {
+			if (FD_ISSET(adt->fd_read[i], &set)) {
+				adt->has_data[i] = 1;
 			}
 		}
 	}
@@ -226,7 +212,7 @@ int ret_file(slave_managerADT adt, char buf[BUFFSIZE]) {
 
 	int i = 0;
 	char c;
-	printf("about to read form fd_read[idx] \n");
+
 	while ((read(adt->fd_read[idx], &c, 1) > 0) && c != '\n' && c != '\0' && i < (BUFFSIZE - 2)) {
 		buf[i++] = c;
 	}
@@ -235,37 +221,11 @@ int ret_file(slave_managerADT adt, char buf[BUFFSIZE]) {
 	buf[i++] = '\0';
 
 	if (adt->qfiles_sent < adt->qfiles) {
+		printf("sending new file \n");
 		send_file(adt, idx);
 	}
 
 	return i;  // cuanto se escribió en el buffer
-	           /*
-	            FD_ZERO()
-	                     This  macro  clears (removes all file descriptors from) set.  It
-	                     should be employed as the first step in initializing a file  de‐
-	                     scriptor set.
-	       
-	              FD_SET()
-	                     This  macro  adds  the file descriptor fd to set.  Adding a file
-	                     descriptor that is already present in the set is  a  no-op,  and
-	                     does not produce an error.
-	       
-	              FD_CLR()
-	                     This  macro removes the file descriptor fd from set.  Removing a
-	                     file descriptor that is not present in the set is a  no-op,  and
-	                     does not produce an error.
-	       
-	       
-	           */
-	           /*
-	           FD_ISSET()
-	                     select()  modifies  the  contents  of  the sets according to the
-	                     rules described below.  After calling select(),  the  FD_ISSET()
-	                     macro  can be used to test if a file descriptor is still present
-	                     in a set.  FD_ISSET() returns nonzero if the file descriptor  fd
-	                     is present in set, and zero if it is not
-	       
-	           */
 }
 int get_id_withdata(slave_managerADT adt) {
 	for (int i = 0; i < adt->qslaves; i++) {
@@ -283,7 +243,8 @@ void send_file(slave_managerADT adt, int idx) {
 		printf("Write not working");
 	}
 	write(adt->fd_write[idx], "\n", 1);
-	adt->qfiles_sent++;
+	printf("file sent \n");
+	(adt->qfiles_sent)++;
 }
 
 void close_extra_pipes(int idx, slave_managerADT adt) {

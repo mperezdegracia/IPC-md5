@@ -7,7 +7,7 @@
 
 #include "slave_manager.h"
 
-#define SLAVES_QTY  1
+#define SLAVES_QTY  2
 #define OUTPUT_FILE "out_app.txt"
 int main(int argc, char* argv[]) {
 	if (argc <= 1) {
@@ -24,13 +24,17 @@ int main(int argc, char* argv[]) {
 
 	init_slaves(sm);
 
-	char buf[BUFFSIZE];
+	
+	sleep(3);
 
-	printf("Im here \n");
 	while (has_next_file(sm)) {
+		char buf[BUFFSIZE]={0};
+
 		ret_file(sm, buf);
-		printf("RESULT: %s", buf);
+		printf("RESULT: %s \n", buf);
+		sleep(1);
 	}
+	printf("\n FINISHED \n");
 	free_adt(sm);
 
 	return 0;

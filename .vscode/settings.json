@@ -8,6 +8,7 @@
         "slavemanager.h": "c",
         "cstdlib": "c",
         "slave_manager.h": "c",
-        "select.h": "c"
+        "select.h": "c",
+        "stdio.h": "c"
     }
 }
