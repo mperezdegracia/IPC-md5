@@ -39,4 +39,4 @@ $(VIEW): $(OBJ_VIEW) $(OBJ)
 
 clean:
 	rm -rf build
-	rm -f $(OBJ_APP) $(OBJ_SLAVE) $(OBJ_VIEW)
+	rm -f $(OBJ_APP) $(OBJ_SLAVE) $(OBJ_VIEW) $(OBJ)
