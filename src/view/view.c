@@ -1,37 +1,40 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "shm_lib.h"
 #include "traffic_lights.h"
 #include "utils.h"
 
-#define MAX_AUTISM 1024
+#define BUF_SIZE 256
 
-int main(int argc, char** argv) {
-	char filename[MAX_AUTISM];
+int main(int argc, char* argv[]) {
+	if (setvbuf(stdin, NULL, _IONBF, 0) != 0)
+		error_exit("setvbuf/stdin");
+	if (setvbuf(stdout, NULL, _IONBF, 0) != 0)
+		error_exit("setvbuf/stdout");
 
+	char filename[BUF_SIZE];
 	if (argc == 1) {
 		scanf("%s", filename);
 	} else if (argc == 2) {
 		strcpy(filename, argv[1]);
 	} else {
-		error_exit("Called view with wrong parameters");
-	}
-	puts(filename);
-	//--------------------------
-	char* blok = attach_memory_block(filename, BLOCK_SIZE);
-
-	if (blok == NULL) {
-		error_exit("Error in attach shm");
+		fprintf(stderr, "Called view with wrong parameters");
+		exit(1);
 	}
 
-	char sharma[MAX_AUTISM];
+	sleep(4);
+	SharedMemory sm = sm_join(filename);
+	char buf[BUF_SIZE];
 
-	sscanf(blok, "%s", sharma);
+	while (sm_read(sm, buf) != 0) {
+		puts(buf);
+		// sleep(2);
+	}
 
-	puts(sharma);
+	sm_close(sm);
 
-	detach_memory_block(blok);
-	//--------------------------
 	return 0;
 }

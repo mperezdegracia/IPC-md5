@@ -13,26 +13,23 @@
 #define OUTPUT_FILE "out_app.txt"
 
 int main(int argc, char* argv[]) {
-	if (argc <= 1)
+	if (argc <= 1) {
 		fprintf(stderr, "Usage: %s [FILES...]\n", argv[0]);
+		exit(1);
+	}
 
-	puts("starting");
+	if (setvbuf(stdin, NULL, _IONBF, 0) != 0)
+		error_exit("setvbuf/stdin");
+	if (setvbuf(stdout, NULL, _IONBF, 0) != 0)
+		error_exit("setvbuf/stdout");
+
+	// puts("starting");
+	shm_unlink("/shm_tpe_so");
 	SlaveManager sm = new_manager(argv + 1, argc - 1, SLAVES_QTY);
 	init_slaves(sm);
-
-	// TESTING -----------------
-	char* blok = attach_memory_block(FILENAME, BLOCK_SIZE);
-
-	if (blok == NULL) {
-		error_exit("Error in attach shm");
-	}
-	//--------------------------
-
+	SharedMemory shm = sm_create("/shm_tpe_so");
+	puts("/shm_tpe_so");
 	sleep(3);
-
-	//--------------------------
-	sprintf(blok, "hola blok");
-	//--------------------------
 
 	char buf[BUFFSIZE] = {0};
 
@@ -40,13 +37,12 @@ int main(int argc, char* argv[]) {
 		ret_file(sm, buf);
 		printf("RESULT: %s\n", buf);
 		sleep(1);
+		sm_write(shm, buf, strlen(buf));
 	}
 
 	free_adt(sm);
+	// sleep(2);
 	puts("finished");
-	//--------------------------
-	detach_memory_block(blok);
-	destroy_memory_block(FILENAME);
-	//--------------------------
+	sm_destroy(shm);
 	return 0;
 }

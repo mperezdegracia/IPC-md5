@@ -129,12 +129,12 @@ void init_slaves(SlaveManager adt) {
 					adt->max_fd = adt->fd_read[i];
 
 				adt->slave_pids[i] = pid;
-				printf("max_fd: %d | new fd_read[%d] = %d \n", adt->max_fd, i, adt->fd_read[i]);
+				// printf("max_fd: %d | new fd_read[%d] = %d \n", adt->max_fd, i, adt->fd_read[i]);
 				_send_file(adt, i);
 			} break;
 		}
 	}
-	printf("initialized slaves ! \n");
+	// printf("initialized slaves ! \n");
 }
 
 int has_next_file(SlaveManager adt) {
@@ -181,11 +181,11 @@ int ret_file(SlaveManager adt, char buf[BUFFSIZE]) {
 	while ((read(adt->fd_read[idx], &c, 1) > 0) && c != '\n' && c != '\0' && i < (BUFFSIZE - 2))
 		buf[i++] = c;
 
-	buf[i++] = '\n';
+	// buf[i++] = '\n';
 	buf[i++] = '\0';
 
 	if (adt->qfiles_sent < adt->qfiles) {
-		printf("sending new file \n");
+		// printf("sending new file \n");
 		_send_file(adt, idx);
 	}
 
@@ -206,7 +206,7 @@ static void _send_file(SlaveManager adt, int idx) {
 		printf("Write not working");
 
 	write(adt->fd_write[idx], "\n", 1);
-	printf("file sent \n");
+	// printf("file sent \n");
 	(adt->qfiles_sent)++;
 }
 

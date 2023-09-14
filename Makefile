@@ -3,8 +3,8 @@ CFLAGS=-Wall -pedantic
 CFLAGS+=-Iinclude
 
 # Descomentar para debuguear
-# CFLAGS+=-g
-# LDFLAGS=-fsanitize=address
+CFLAGS+=-g
+LDFLAGS=-fsanitize=address
 
 SRC=$(wildcard src/*.c)
 SRC_APP=$(wildcard src/app/*.c)
@@ -25,7 +25,7 @@ all: dir $(APP) $(SLAVE) $(VIEW)
 dir:
 	mkdir -p build
 
-$(APP): $(OBJ_APP) $(OBJ) 
+$(APP): $(OBJ_APP) $(OBJ)
 	$(CC) -o $(APP) $^ $(LDFLAGS)
 
 $(SLAVE): $(OBJ_SLAVE) $(OBJ)

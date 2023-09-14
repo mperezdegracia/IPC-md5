@@ -12,6 +12,11 @@
 #define BUFFSIZE 256
 
 int main(int argc, char *argv[]) {
+	if (setvbuf(stdin, NULL, _IONBF, 0) != 0)
+		error_exit("setvbuf/stdin");
+	if (setvbuf(stdout, NULL, _IONBF, 0) != 0)
+		error_exit("setvbuf/stdout");
+
 	FILE *f;
 	char command[BUFFSIZE] = {0};
 	char filepath[BUFFSIZE] = {0};
