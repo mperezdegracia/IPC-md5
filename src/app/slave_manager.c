@@ -141,7 +141,7 @@ int has_next_file(SlaveManager adt) {
 	return adt->qfiles > adt->ret_files;
 }
 
-int ret_file(SlaveManager adt, char buf[BUFFSIZE]) {
+int ret_file(SlaveManager adt, char* buf) {
 	if (buf == NULL || adt == NULL)
 		_error_free_exit(adt, "Invalid Parameters");
 
@@ -178,7 +178,7 @@ int ret_file(SlaveManager adt, char buf[BUFFSIZE]) {
 	int i = 0;
 	char c;
 
-	while ((read(adt->fd_read[idx], &c, 1) > 0) && c != '\n' && c != '\0' && i < (BUFFSIZE - 2))
+	while ((read(adt->fd_read[idx], &c, 1) > 0) && c != '\n' && c != '\0' && i < (BUF_SIZE - 2))
 		buf[i++] = c;
 
 	// buf[i++] = '\n';
@@ -189,7 +189,7 @@ int ret_file(SlaveManager adt, char buf[BUFFSIZE]) {
 		_send_file(adt, idx);
 	}
 
-	return i;  // cuanto se escribió en el buffer
+	return adt->slave_pids[idx];  // cuanto se escribió en el buffer
 }
 
 static void _error_free_exit(SlaveManager adt, char* msg) {

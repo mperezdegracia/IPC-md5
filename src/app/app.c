@@ -9,7 +9,7 @@
 #include "slave_manager.h"
 #include "utils.h"
 
-#define SLAVES_QTY  2
+#define SLAVES_QTY  5
 #define OUTPUT_FILE "out_app.txt"
 
 int main(int argc, char* argv[]) {
@@ -24,25 +24,32 @@ int main(int argc, char* argv[]) {
 		error_exit("setvbuf/stdout");
 
 	// puts("starting");
-	shm_unlink("/shm_tpe_so");
-	SlaveManager sm = new_manager(argv + 1, argc - 1, SLAVES_QTY);
-	init_slaves(sm);
+	// shm_unlink("/shm_tpe_so");
 	SharedMemory shm = sm_create("/shm_tpe_so");
 	puts("/shm_tpe_so");
-	sleep(3);
 
-	char buf[BUFFSIZE] = {0};
+	SlaveManager sm = new_manager(argv + 1, argc - 1, SLAVES_QTY);
+	init_slaves(sm);
+
+	// espero para que se conecte la view
+	sleep(2);
+
+	char buf[BUF_SIZE] = {0};
+	char send[BUF_SIZE + 10];
+	int pid, len;
 
 	while (has_next_file(sm)) {
-		ret_file(sm, buf);
-		printf("RESULT: %s\n", buf);
+		pid = ret_file(sm, buf);
+		len = sprintf(send, "%i  %s", pid, buf);
+		sm_write(shm, send, len);
+		// printf("RESULT: %s\n", buf);
 		sleep(1);
-		sm_write(shm, buf, strlen(buf));
 	}
 
 	free_adt(sm);
-	// sleep(2);
-	puts("finished");
 	sm_destroy(shm);
+	// sleep(2);
+	// puts("finished");
+
 	return 0;
 }

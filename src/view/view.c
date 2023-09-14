@@ -4,7 +4,6 @@
 #include <unistd.h>
 
 #include "shm_lib.h"
-#include "traffic_lights.h"
 #include "utils.h"
 
 #define BUF_SIZE 256
@@ -25,7 +24,7 @@ int main(int argc, char* argv[]) {
 		exit(1);
 	}
 
-	sleep(4);
+	// sleep(4);
 	SharedMemory sm = sm_join(filename);
 	char buf[BUF_SIZE];
 
