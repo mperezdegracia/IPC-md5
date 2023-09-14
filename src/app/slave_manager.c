@@ -57,7 +57,7 @@ SlaveManager new_manager(char** filenames, int count, int qslaves) {
 
 	SlaveManager sm = calloc(1, sizeof(struct slave_manager_cdt));
 	if (sm == NULL)
-		error_exit("Memory allocation error [slave_manager]");
+		error_exit("Memory allocation error");
 
 	sm->filenames = filenames;
 	sm->qfiles = count;
@@ -65,19 +65,19 @@ SlaveManager new_manager(char** filenames, int count, int qslaves) {
 
 	sm->has_data = calloc(qslaves, sizeof(char));
 	if (sm->has_data == NULL)
-		_error_free_exit(sm, "Memory allocation error [slave_pids]");
+		_error_free_exit(sm, "Memory allocation error");
 
 	sm->slave_pids = malloc(sizeof(int) * qslaves);
 	if (sm->slave_pids == NULL)
-		_error_free_exit(sm, "Memory allocation error [slave_pids]");
+		_error_free_exit(sm, "Memory allocation error");
 
 	sm->fd_read = malloc(sizeof(int) * qslaves);
 	if (sm->fd_read == NULL)
-		_error_free_exit(sm, "Memory allocation error [slave_pids]");
+		_error_free_exit(sm, "Memory allocation error");
 
 	sm->fd_write = malloc(sizeof(int) * qslaves);
 	if (sm->fd_write == NULL)
-		_error_free_exit(sm, "Memory allocation error [slave_pids]");
+		_error_free_exit(sm, "Memory allocation error");
 
 	return sm;
 }
@@ -176,14 +176,19 @@ int ret_file(SlaveManager adt, char buf[BUFFSIZE]) {
 	adt->ret_files += 1;
 
 	int i = 0;
-	char c;
 
-	while ((read(adt->fd_read[idx], &c, 1) > 0) && c != '\n' && c != '\0' && i < (BUFFSIZE - 2))
-		buf[i++] = c;
+	// while ((read(adt->fd_read[idx], &c, 1) > 0) && c != '\n' && c != '\0' && i < (BUFFSIZE - 2))
+	// 	buf[i++] = c;
 
-	buf[i++] = '\n';
-	buf[i++] = '\0';
-
+	// buf[i++] = '\n';
+	// buf[i++] = '\0';
+	int read_bytes = read(adt->fd_read[idx], buf, BUFFSIZE - 2);
+	for (int i = 0; i < read_bytes; i++) {
+		if (buf[i] == '\n') {
+			buf[i + 1] = '\0';
+			break;
+		}
+	}
 	if (adt->qfiles_sent < adt->qfiles) {
 		printf("sending new file \n");
 		_send_file(adt, idx);
