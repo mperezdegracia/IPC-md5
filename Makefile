@@ -3,8 +3,8 @@ CFLAGS=-Wall -pedantic
 CFLAGS+=-Iinclude
 
 # Descomentar para debuguear
-CFLAGS+=-g
-LDFLAGS=-fsanitize=address
+# CFLAGS+=-g
+# LDFLAGS=-fsanitize=address
 
 SRC=$(wildcard src/*.c)
 SRC_APP=$(wildcard src/app/*.c)
