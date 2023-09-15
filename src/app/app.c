@@ -10,9 +10,9 @@
 #include "utils.h"
 
 #define SLAVES_QTY  5
-#define OUTPUT_FILE "out_app.txt"
+#define OUTPUT_FILE "tpe_so_output.txt"
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
 	if (argc <= 1) {
 		fprintf(stderr, "Usage: %s [FILES...]\n", argv[0]);
 		exit(1);
@@ -23,13 +23,13 @@ int main(int argc, char* argv[]) {
 	if (setvbuf(stdout, NULL, _IONBF, 0) != 0)
 		error_exit("setvbuf/stdout");
 
-	// puts("starting");
-	// shm_unlink("/shm_tpe_so");
 	SharedMemory shm = sm_create("/shm_tpe_so");
 	puts("/shm_tpe_so");
 
 	SlaveManager sm = new_manager(argv + 1, argc - 1, SLAVES_QTY);
 	init_slaves(sm);
+
+	FILE *out = fopen(OUTPUT_FILE, "w");
 
 	// espero para que se conecte la view
 	sleep(2);
@@ -42,14 +42,12 @@ int main(int argc, char* argv[]) {
 		pid = ret_file(sm, buf);
 		len = sprintf(send, "%i  %s", pid, buf);
 		sm_write(shm, send, len);
-		// printf("RESULT: %s\n", buf);
-		sleep(1);
+		fprintf(out, "%s\n", send);
 	}
 
-	free_adt(sm);
 	sm_destroy(shm);
-	// sleep(2);
-	// puts("finished");
+	free_adt(sm);
+	fclose(out);
 
 	return 0;
 }

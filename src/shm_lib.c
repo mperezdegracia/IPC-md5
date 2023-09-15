@@ -1,58 +1,3 @@
-// #include "shm_lib.h"
-
-// #include <stdio.h>
-// #include <sys/ipc.h>
-// #include <sys/shm.h>
-// #include <sys/types.h>
-
-// #include "utils.h"
-
-// // TODO: shmget -> shmopen
-
-// static int _get_shared_block(char *filename, int size) {
-// 	key_t key;
-
-// 	// key numerico del filename
-// 	key = ftok(filename, 0);
-
-// 	if (key == ERROR) {
-// 		error_exit("Error in ftok");
-// 	}
-
-// 	//-1 error o id del bloque creado
-// 	return shmget(key, size, 0644 | IPC_CREAT);
-// }
-
-// char *attach_memory_block(char *filename, int size) {
-// 	int shared_block_id = _get_shared_block(filename, size);
-// 	char *result;
-
-// 	if (shared_block_id == ERROR) {
-// 		error_exit("Error in shmget");
-// 	}
-
-// 	result = shmat(shared_block_id, NULL, 0);
-
-// 	if (result == (char *)ERROR) {
-// 		error_exit("Error in shmat");
-// 	}
-
-// 	return result;
-// }
-
-// char detach_memory_block(char *block) {
-// 	return (shmdt(block) != ERROR);
-// }
-
-// char destroy_memory_block(char *filename) {
-// 	int shared_block_id = _get_shared_block(filename, 0);
-
-// 	if (shared_block_id == ERROR) {
-// 		error_exit("Error in shmget");
-// 	}
-// 	return (shmctl(shared_block_id, IPC_RMID, NULL) != ERROR);
-// }
-
 #include "shm_lib.h"
 
 #include <fcntl.h>
@@ -68,10 +13,9 @@
 #define BUF_SIZE  4096
 #define PATH_SIZE 30
 
-struct timespec ts;
-
 struct shared_memory_cdt {
-	sem_t sem;
+	sem_t wsem, rsem;
+	char view, eof;
 	int fd;
 	size_t widx, ridx;
 	char path[PATH_SIZE];
@@ -79,6 +23,8 @@ struct shared_memory_cdt {
 };
 
 SharedMemory sm_create(char* path) {
+	shm_unlink(path);
+
 	int fd = shm_open(path, O_CREAT | O_RDWR | O_EXCL, S_IRUSR | S_IWUSR);
 	if (fd == -1)
 		error_exit("shm_open");
@@ -89,12 +35,15 @@ SharedMemory sm_create(char* path) {
 	if (sm == MAP_FAILED)
 		error_exit("mmap");
 
-	sm->widx = sm->ridx = 0;
+	sm->view = sm->eof = 0;
 	sm->fd = fd;
+	sm->widx = sm->ridx = 0;
 	strcpy(sm->path, path);
 
-	if (sem_init(&sm->sem, 1, 0) == -1)
-		error_exit("sem_init");
+	if (sem_init(&sm->wsem, 1, 0) == -1)
+		error_exit("sem_init-wsem");
+	if (sem_init(&sm->rsem, 1, 0) == -1)
+		error_exit("sem_init-rsem");
 
 	return sm;
 }
@@ -108,34 +57,50 @@ SharedMemory sm_join(char* path) {
 	if (sm == MAP_FAILED)
 		error_exit("mmap");
 
+	// no quiero que dos procesos vista se ejecuten en simultáneo
+	if (sm->view != 0) {
+		sm_close(sm);
+		return NULL;
+	}
+	sm->view++;
+
 	return sm;
 }
 
 void sm_write(SharedMemory self, char* buf, int size) {
 	memcpy(self->buf + self->widx, buf, size + 1);
 	self->widx += size + 1;
-	if (sem_post(&self->sem) == -1)
-		error_exit("sem_post");
+	if (sem_post(&self->wsem) == -1)
+		error_exit("sem_post-wsem");
 }
 
 int sm_read(SharedMemory self, char* buf) {
-	// TODO: SACAR ESTO EL WAIT NO TIENE QUE SER TIMED
-	clock_gettime(CLOCK_REALTIME, &ts);
-	ts.tv_sec += 10;
-	if (sem_timedwait(&self->sem, &ts) == -1)
-		error_exit("sem_wait");
+	if (self->eof)
+		return 0;
+	if (sem_wait(&self->wsem) == -1)
+		error_exit("sem_wait-wsem");
 	int len = get_line(self->buf + self->ridx, buf);
 	self->ridx += len + 1;
 	return len;
 }
 
+char sm_eof(SharedMemory self) {
+	return self->eof;
+}
+
 void sm_destroy(SharedMemory self) {
+	self->eof = 1;
+	if (sem_wait(&self->rsem) == -1)
+		error_exit("sem_wait");
+
 	char path[PATH_SIZE];
 	strcpy(path, self->path);
 	int fd = self->fd;
 
-	if (sem_destroy(&self->sem) == -1)
-		error_exit("sem_close");
+	if (sem_destroy(&self->wsem) == -1)
+		error_exit("sem_close-wsem");
+	if (sem_destroy(&self->rsem) == -1)
+		error_exit("sem_close-rsem");
 	if (munmap(self, sizeof(struct shared_memory_cdt)) == -1)
 		error_exit("munmap");
 	if (shm_unlink(path) == -1)
@@ -147,8 +112,13 @@ void sm_destroy(SharedMemory self) {
 void sm_close(SharedMemory self) {
 	int fd = self->fd;
 
-	if (sem_destroy(&self->sem) == -1)
-		error_exit("sem_close");
+	if (sem_post(&self->rsem) == -1)
+		error_exit("sem_post");
+
+	if (sem_destroy(&self->wsem) == -1)
+		error_exit("sem_close-wsem");
+	if (sem_destroy(&self->rsem) == -1)
+		error_exit("sem_close-rsem");
 	if (munmap(self, sizeof(struct shared_memory_cdt)) == -1)
 		error_exit("munmap");
 	if (close(fd) == -1)
