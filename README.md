@@ -7,6 +7,12 @@
   * [Inicializando un gitflow repo](#inicializando-un-gitflow-repo)
   * [Manejando ramas](#manejando-ramas)
 * [Compilando](#compilando)
+* [Problemas encontrados](#problemas-encontrados)
+* [Decisiones tomadas](#decisiones-tomadas)
+  * [Shared Memory](#shared-memory)
+* [Limitaciones](#limitaciones)
+* [Codigo reutilizado](#codigo-reutilizado)
+* [Diagrama](#diagrama)
 
 ## Requerimientos
 
@@ -94,3 +100,24 @@ Para compilar el proyecto es tan sencillo como correr el script `compile.sh` que
 ```bash
 $ ./compile.sh
 ```
+
+## Problemas encontrados
+
+### Shared memory
+
+Al estar investigando acerca del tema de "shared memory", pudimos entender varios aspectos del tema. Implementarlo en el proyecto no tuvo mucho problema mas que utilizamos las syscalls que quedaron obsoletas con el paso del tiempo, como pueden ser "shmget", "shmat" o "shmdt". Por esta razon, tuvimos que cambiar las funciones creadas y usar syscalls tales como "shmopen" y "mmap", que por lo que entendimos son el estandar de hoy en dia.
+
+El verdadero problema, vino al implementar los semaforos. Cuando incluimos los semaforos en el codigo descubrimos un gran problema al ejecutar el vista, este programa nunca termina. Como el proceso vista solo recibe la informacion necesaria para conectarse a la "shared memory" por entrada estandar no tenemos manera de decirle a el proceso vista cuando ya no hay mas archivos para leer. Al ejecutar el programa, podiamos apreciar como habia un buen funcionamiento de la shared memory entre el proceso aplicaion y el proceso vista, pero cuando terminaba de imprimir los archivos, el proceso aplicacion terminaba su ejecuccion y el proceso vista se queda esperando en el semaforo por el siguiente elemento.
+
+Nuestra primera solucion a esto fue investigar la API de semaforos POSIX. Investigando, encontramos "sem_timedwait" la cual hace la espera como el semaforo que habiamos incluido anteriormente y si en un rango de tiempo (programado) el semaforo no cambia de valor, inmediatamente se termina este proceso, lo cual permite que el proceso visto pueda terminar su ejecucion. 
+
+## Decisiones tomadas
+
+### TADs
+
+
+## Limitaciones
+
+## Codigo reutilizado
+
+## Diagrama

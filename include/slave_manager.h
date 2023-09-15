@@ -13,8 +13,7 @@
 #define CHILD    0
 #define READ     0
 #define WRITE    1
-#define MAXPATH  256
-#define BUFFSIZE 256
+#define BUF_SIZE 256
 
 typedef struct slave_manager_cdt* SlaveManager;
 
@@ -22,6 +21,6 @@ SlaveManager new_manager(char** filenames, int count, int qslaves);
 void init_slaves(SlaveManager adt);
 void free_adt(SlaveManager adt);
 int has_next_file(SlaveManager adt);
-int ret_file(SlaveManager adt, char buf[BUFFSIZE]);
+int ret_file(SlaveManager adt, char* buf);
 
 #endif

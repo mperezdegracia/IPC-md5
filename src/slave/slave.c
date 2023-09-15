@@ -1,32 +1,35 @@
-#include "utils.h"
-#define _GNU_SOURCE
-#include <fcntl.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
 
-#define BUFFSIZE 256
+#include "utils.h"
+
+#define BUF_SIZE 256
 
 int main(int argc, char *argv[]) {
-	FILE *f;
-	char command[BUFFSIZE] = {0};
-	char filepath[BUFFSIZE] = {0};
-	char output[BUFFSIZE] = {0};
+	if (setvbuf(stdin, NULL, _IONBF, 0) != 0)
+		error_exit("setvbuf/stdin");
+	if (setvbuf(stdout, NULL, _IONBF, 0) != 0)
+		error_exit("setvbuf/stdout");
+
+	FILE *p;
+
+	char *md5 = "md5sum ";
+	int md5len = strlen(md5);
+
+	char filepath[BUF_SIZE];
+	char command[BUF_SIZE + md5len];
+	char output[BUF_SIZE];
 
 	while (fgets(filepath, sizeof(filepath), stdin) != NULL) {
-		sprintf(command, "md5sum %s", filepath);
-		f = popen(command, "r");
-		if (f == NULL)
+		sprintf(command, "%s%s", md5, filepath);
+		p = popen(command, "r");
+		if (p == NULL)
 			error_exit("popen");
 
-		while (fgets(output, sizeof(output), f) != NULL)
-			dprintf(STDOUT_FILENO, "%s", output);
+		while (fgets(output, sizeof(output), p) != NULL)
+			printf("%s", output);
 
-		pclose(f);
+		pclose(p);
 	}
 
 	return 0;

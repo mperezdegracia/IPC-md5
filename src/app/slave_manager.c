@@ -33,7 +33,6 @@ void free_adt(SlaveManager adt) {
 	int slave_flag = adt->slave_pids != NULL;
 	int data_flag = adt->has_data != NULL;
 
-	// free could be called if memory allocation failed
 	for (int i = 0; i < adt->qslaves && write_flag && read_flag; i++) {
 		close(adt->fd_write[i]);
 		close(adt->fd_read[i]);
@@ -86,25 +85,23 @@ void init_slaves(SlaveManager adt) {
 	if (adt == NULL)
 		error_exit("invalid parameters");
 
-	// pipes
 	for (int i = 0; i < adt->qslaves; i++) {
 		int sm[2];  // slave to master
 		int ms[2];  // master to slave
 
 		if (pipe(sm) == -1 || pipe(ms) == -1)
-			_error_free_exit(adt, "Pipe Error");
+			_error_free_exit(adt, "pipe");
 
 		int pid = fork();
 
 		switch (pid) {
 			case ERROR: {
-				/* code */
-				_error_free_exit(adt, "Fork Error");
+				_error_free_exit(adt, "fork");
 			} break;
 
 			case CHILD: {
 				if (close(ms[WRITE]) == -1 || close(sm[READ]) == -1)
-					_error_free_exit(adt, "Error Close Pipe");
+					_error_free_exit(adt, "close");
 
 				_close_extra_pipes(i, adt);
 
@@ -116,12 +113,12 @@ void init_slaves(SlaveManager adt) {
 				char* argv[] = {"./build/slave", NULL};
 				execve("./build/slave", argv, NULL);
 
-				_error_free_exit(adt, "Error tratando de ejecutar ./build/slave");
+				_error_free_exit(adt, "execve");
 			} break;
 
 			default: {
 				if (close(sm[WRITE]) == -1 || close(ms[READ]) == -1)
-					_error_free_exit(adt, "Error Close Pipe");
+					_error_free_exit(adt, "close");
 
 				adt->fd_read[i] = sm[READ];
 				adt->fd_write[i] = ms[WRITE];
@@ -129,21 +126,19 @@ void init_slaves(SlaveManager adt) {
 					adt->max_fd = adt->fd_read[i];
 
 				adt->slave_pids[i] = pid;
-				printf("max_fd: %d | new fd_read[%d] = %d \n", adt->max_fd, i, adt->fd_read[i]);
 				_send_file(adt, i);
 			} break;
 		}
 	}
-	printf("initialized slaves ! \n");
 }
 
 int has_next_file(SlaveManager adt) {
 	return adt->qfiles > adt->ret_files;
 }
 
-int ret_file(SlaveManager adt, char buf[BUFFSIZE]) {
+int ret_file(SlaveManager adt, char* buf) {
 	if (buf == NULL || adt == NULL)
-		_error_free_exit(adt, "Invalid Parameters");
+		_error_free_exit(adt, "ret_file");
 
 	if (adt->av_files <= 0) {
 		fd_set set;
@@ -155,13 +150,11 @@ int ret_file(SlaveManager adt, char buf[BUFFSIZE]) {
 			FD_SET(adt->fd_read[i], &set);
 
 		int q_fds = select(adt->max_fd + 1, &set, NULL, NULL, NULL);
-
 		if (q_fds == ERROR)
-			_error_free_exit(adt, "ERROR in select()");
+			_error_free_exit(adt, "select");
 
 		adt->av_files = q_fds;
 
-		// update has_data
 		for (int i = 0; i < adt->qslaves; i++) {
 			if (FD_ISSET(adt->fd_read[i], &set))
 				adt->has_data[i] = 1;
@@ -177,24 +170,19 @@ int ret_file(SlaveManager adt, char buf[BUFFSIZE]) {
 
 	int i = 0;
 
-	// while ((read(adt->fd_read[idx], &c, 1) > 0) && c != '\n' && c != '\0' && i < (BUFFSIZE - 2))
+	// while ((read(adt->fd_read[idx], &c, 1) > 0) && c != '\n' && c != '\0' && i < (BUF_SIZE - 2))
 	// 	buf[i++] = c;
-
-	// buf[i++] = '\n';
 	// buf[i++] = '\0';
-	int read_bytes = read(adt->fd_read[idx], buf, BUFFSIZE - 2);
-	for (int i = 0; i < read_bytes; i++) {
-		if (buf[i] == '\n') {
-			buf[i + 1] = '\0';
-			break;
-		}
-	}
-	if (adt->qfiles_sent < adt->qfiles) {
-		printf("sending new file \n");
-		_send_file(adt, idx);
-	}
+	int read_bytes = read(adt->fd_read[idx], buf, BUF_SIZE - 2);
+	for (i = 0; i < read_bytes && buf[i] != '\n'; i++)
+		continue;
+	buf[i] = '\0';
 
-	return i;  // cuanto se escribió en el buffer
+	if (adt->qfiles_sent < adt->qfiles)
+		_send_file(adt, idx);
+
+	// return i;  // cuanto se escribió en el buffer
+	return adt->slave_pids[idx];  // pid del esclavo
 }
 
 static void _error_free_exit(SlaveManager adt, char* msg) {
@@ -204,21 +192,20 @@ static void _error_free_exit(SlaveManager adt, char* msg) {
 
 static void _send_file(SlaveManager adt, int idx) {
 	if (adt == NULL || idx < 0)
-		error_exit("Invalid parameters");
+		_error_free_exit(adt, "_send_file");
 
 	int size = strlen(adt->filenames[adt->qfiles_sent]);
 	if (write(adt->fd_write[idx], adt->filenames[adt->qfiles_sent], size) != size)
-		printf("Write not working");
+		fprintf(stderr, "Write not working");
 
 	write(adt->fd_write[idx], "\n", 1);
-	printf("file sent \n");
-	(adt->qfiles_sent)++;
+	adt->qfiles_sent++;
 }
 
 static void _close_extra_pipes(int idx, SlaveManager adt) {
 	for (int i = 0; i < idx; i++) {
 		if (close(adt->fd_read[i]) == -1 || close(adt->fd_write[i]) == -1)
-			_error_free_exit(adt, "Error Close Pipe");
+			_error_free_exit(adt, "close");
 	}
 }
 

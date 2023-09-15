@@ -1,3 +1,44 @@
-int main(int argc, char **argv) {
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include "shm_lib.h"
+#include "utils.h"
+
+#define BUF_SIZE 256
+
+int main(int argc, char* argv[]) {
+	if (setvbuf(stdin, NULL, _IONBF, 0) != 0)
+		error_exit("setvbuf/stdin");
+	if (setvbuf(stdout, NULL, _IONBF, 0) != 0)
+		error_exit("setvbuf/stdout");
+
+	char filename[BUF_SIZE];
+	if (argc == 1) {
+		scanf("%s", filename);
+	} else if (argc == 2) {
+		strcpy(filename, argv[1]);
+	} else {
+		fprintf(stderr, "Called view with wrong parameters");
+		exit(1);
+	}
+
+	// sleep(4);
+	SharedMemory sm = sm_join(filename);
+	if (sm == NULL) {
+		fprintf(stderr, "Only one view can be called\n");
+		exit(1);
+	}
+
+	char buf[BUF_SIZE];
+
+	while (!sm_eof(sm)) {
+		if (sm_read(sm, buf) != 0)
+			puts(buf);
+	}
+
+	sm_close(sm);
+
 	return 0;
 }
