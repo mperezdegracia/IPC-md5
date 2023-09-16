@@ -10,11 +10,10 @@
 - [Problemas encontrados](#problemas-encontrados)
   - [Shared Memory](#shared-memory)
   - [Punteros en memoria compartida](#punteros-en-memoria-compartida)
-  - [Problema 3](#problema-3)
+  - [Uso de select](#uso-de-select)
 - [Decisiones tomadas](#decisiones-tomadas)
   - [TADs](#tads)
-  - [Decision 2](#decision-2)
-  - [Decision 3](#decision-3)
+  - [Organizacion](#organizacion)
 - [Limitaciones](#limitaciones)
 - [Codigo reutilizado](#codigo-reutilizado)
 - [Diagrama](#diagrama)
@@ -129,7 +128,7 @@ La solucion final que implementamos feu incluir un "_end of file_" en el TAD del
 
 Al declarar el TAD de la "_shared memory_" teniamos un error que no nos perimitia destruir o desincronizar el bloque de memoria creado anteriormente. Tras mucho "_debugging_" descubrimos que le problema yacia dentro de la declaracion de nuestra variable "_path_" dentro del TAD, la cual anteriormente era declarada como puntero. Como era declarado como puntero, al crear la memoria compartida se guardaba el valor "_path_" recibido por paramtero de esta manera. Esto es un error ya que se guardaba este parametro de manera que apuntara a una direccion de memoria de un proceso especifico. Al quere borrar o cerrar la coneccion con la memoria compartido, lanzaba un error, ya que el puntero no correspondia. La solucion fue declarar esta variable como un array estatico y de esta manera solucionar los errores y poder desaclopar la coneccion a la memoria compartido y luego borrar el bloque.
 
-### Problema 3
+### Uso de select
 
 Más en el comienzo del desarrollo, tuvimos un problema con el uso de 'select', el programa quedaba colgado en el select. Resulta que el slave no estaba escribiendo sus resultados correctamente en el pipe, printf no lograba escribir en el fd 1 (que estaba mapeado al pipe). Finalmente logramos solucionarlo mediante setvbuffer().
 
@@ -139,26 +138,17 @@ Más en el comienzo del desarrollo, tuvimos un problema con el uso de 'select', 
 
 Una de la decisiones mas importantes que tomamos a principio del proyecto fue trabajar con dos TADs (Tipos Abstractos de Datos). Creamos dos TADs, uno para guardar la informacion de los esclavos y otro para la infromacion de la memoria compartida. Al crear las librerias, tanto "_slave manager_" como "_shm lib_", se facilita mucho la modularizacion del codigo y, al crear los "_struct_" que agrupen tantas variables, el codigo queda mucho mas limpio y agradable a la vista. Tambien se facilita el pasaje y recibo de parametros en diversas funciones debido a que se puede enviar y recibir la estructura como parametro y no estar pasando parametros individualmente.
 
-### Decision 2
+### Organizacion
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque ac erat nunc. Nulla arcu tellus, pharetra ut tempor in, facilisis id tellus. Aliquam pulvinar dui sit amet mauris lacinia, dictum vehicula lectus fringilla. Donec id odio euismod, blandit ex quis, efficitur nunc. Aliquam non justo hendrerit, lobortis justo nec, ornare eros. Fusce dignissim, dolor sed fringilla egestas, nibh purus efficitur magna, in sollicitudin libero elit lobortis enim. Nam fermentum venenatis diam, vel congue odio cursus ut. Duis sapien ex, dictum sit amet sollicitudin eu, dictum non nunc. Praesent sapien enim, venenatis eget lacus quis, imperdiet euismod nisl.
-
-Vivamus in mauris faucibus, cursus ex at, porttitor libero. Integer accumsan enim at orci pharetra luctus. Nam porttitor arcu quis sapien dictum cursus. Maecenas sit amet suscipit metus. Sed nunc nunc, venenatis quis dignissim ornare, dapibus ac elit. Etiam a mi odio. Mauris sit amet consectetur neque, eu mattis justo.
-
-### Decision 3
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque ac erat nunc. Nulla arcu tellus, pharetra ut tempor in, facilisis id tellus. Aliquam pulvinar dui sit amet mauris lacinia, dictum vehicula lectus fringilla. Donec id odio euismod, blandit ex quis, efficitur nunc. Aliquam non justo hendrerit, lobortis justo nec, ornare eros. Fusce dignissim, dolor sed fringilla egestas, nibh purus efficitur magna, in sollicitudin libero elit lobortis enim. Nam fermentum venenatis diam, vel congue odio cursus ut. Duis sapien ex, dictum sit amet sollicitudin eu, dictum non nunc. Praesent sapien enim, venenatis eget lacus quis, imperdiet euismod nisl.
-
-Vivamus in mauris faucibus, cursus ex at, porttitor libero. Integer accumsan enim at orci pharetra luctus. Nam porttitor arcu quis sapien dictum cursus. Maecenas sit amet suscipit metus. Sed nunc nunc, venenatis quis dignissim ornare, dapibus ac elit. Etiam a mi odio. Mauris sit amet consectetur neque, eu mattis justo.
+Como el trabajo practico estaba dividido muy estrictamente en partes (la aplicacion, los esclavos y la vista), decidimos entre el grupo separar estas tareas para un avance mas rapido y seguro del proyecto. Esto permitio a cada integrante del grupo realizar su parte en el proyecto sin mucha necesidad de comunicacion entre nosotros. Ahora si, llegando al final del proyecto nos comunicamos entre nosotros para resolver la comunicacion entre cada una de las partes. De esta manera pudimos conectar cada una de las partes tomando muchas decisiones menores a lo largo del camino.
 
 ## Limitaciones
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque ac erat nunc. Nulla arcu tellus, pharetra ut tempor in, facilisis id tellus. Aliquam pulvinar dui sit amet mauris lacinia, dictum vehicula lectus fringilla. Donec id odio euismod, blandit ex quis, efficitur nunc. Aliquam non justo hendrerit, lobortis justo nec, ornare eros. Fusce dignissim, dolor sed fringilla egestas, nibh purus efficitur magna, in sollicitudin libero elit lobortis enim. Nam fermentum venenatis diam, vel congue odio cursus ut. Duis sapien ex, dictum sit amet sollicitudin eu, dictum non nunc. Praesent sapien enim, venenatis eget lacus quis, imperdiet euismod nisl.
-
-Vivamus in mauris faucibus, cursus ex at, porttitor libero. Integer accumsan enim at orci pharetra luctus. Nam porttitor arcu quis sapien dictum cursus. Maecenas sit amet suscipit metus. Sed nunc nunc, venenatis quis dignissim ornare, dapibus ac elit. Etiam a mi odio. Mauris sit amet consectetur neque, eu mattis justo.
+En cuanto a limitaciones del proyecto, simplemente tuvimos muy en cuenta lo pedido por el trabajo practico. Al leer en varias ocasiones la consigna del primer trabajo practico de la materia, notamos que todo estaba detalladamente explicado como lo deberiamos resolver, dejando pocas decisiones para tomar (mayormente en cuanto a la estructura del codigo). Al tener tantos puntos en consideraciones, se limita las posibilidades que teniamos para resolver varios problemas, ya que ciertas soluciones a problemas encontrados en el proyecto podian realizar un conflicto con otros puntos pedidos por el trabajo practico. De esta manera, dejaba pocas posibilidades para cumplir con todas las necesidades o aspectos que pedia el trabajo practico. 
 
 ## Codigo reutilizado
 
 No utilizamos ninguna fuente externa aparte del "_man page_". Basamos partes de nuestro codigo en los ejemplos que proporciona este "_man page_", mas notablemente, para la realizacion de la libreria de "_shared memory_" tomamos mucha inspiracion del codigo de ejemplo que proporicona acerca de "_shmopen_".
 
 ## Diagrama
+
