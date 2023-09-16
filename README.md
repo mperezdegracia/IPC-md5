@@ -2,29 +2,29 @@
 
 ## Tabla de contenidos
 
-* [Requerimientos](#requerimientos)
-* [GitFlow](#gitflow)
-  * [Inicializando un gitflow repo](#inicializando-un-gitflow-repo)
-  * [Manejando ramas](#manejando-ramas)
-* [Compilando](#compilando)
-* [Problemas encontrados](#problemas-encontrados)
-  * [Shared Memory](#shared-memory)
-  * [Punteros en memoria compartida](#punteros-en-memoria-compartida)
-  * [Problema 3](#problema-3)
-* [Decisiones tomadas](#decisiones-tomadas)
-  * [TADs](#tads)
-  * [Decision 2](#decision-2)
-  * [Decision 3](#decision-3)
-* [Limitaciones](#limitaciones)
-* [Codigo reutilizado](#codigo-reutilizado)
-* [Diagrama](#diagrama)
+- [Requerimientos](#requerimientos)
+- [GitFlow](#gitflow)
+  - [Inicializando un gitflow repo](#inicializando-un-gitflow-repo)
+  - [Manejando ramas](#manejando-ramas)
+- [Compilando](#compilando)
+- [Problemas encontrados](#problemas-encontrados)
+  - [Shared Memory](#shared-memory)
+  - [Punteros en memoria compartida](#punteros-en-memoria-compartida)
+  - [Problema 3](#problema-3)
+- [Decisiones tomadas](#decisiones-tomadas)
+  - [TADs](#tads)
+  - [Decision 2](#decision-2)
+  - [Decision 3](#decision-3)
+- [Limitaciones](#limitaciones)
+- [Codigo reutilizado](#codigo-reutilizado)
+- [Diagrama](#diagrama)
 
 ## Requerimientos
 
 Para el trabajo en cuestión se estarán utilizando los siguientes componentes:
 
-* [gitflow plugin](https://github.com/nvie/gitflow)
-* docker
+- [gitflow plugin](https://github.com/nvie/gitflow)
+- docker
 
 El plugin de gitflow (explicado en [GitFlow](#gitflow)) permite manejar los branch de `git` de una forma más sencilla que la habitual, siguiendo la filosofía del modelado de ramas de [gitflow](https://nvie.com/posts/a-successful-git-branching-model/).
 
@@ -61,37 +61,44 @@ $ git flow init -d  # toma los valores por default
 
 Ahora para el manejo de todas las ramas y del repo en general, transcribo del [README de gitflow](https://github.com/nvie/gitflow/blob/develop/README.mdown), el manual de como manejar las ramas.
 
-* To list/start/finish feature branches, use:
+- To list/start/finish feature branches, use:
+
   ```bash
   git flow feature
   git flow feature start <name> [<base>]
   git flow feature finish <name>
   ```
+
   For feature branches, the `<base>` arg must be a commit on `develop`.
 
-* To push/pull a feature branch to the remote repository, use:
+- To push/pull a feature branch to the remote repository, use:
+
   ```bash
   git flow feature publish <name>
   git flow feature pull <remote> <name>
   ```
 
-* To list/start/finish release branches, use:
+- To list/start/finish release branches, use:
+
   ```bash
   git flow release
   git flow release start <release> [<base>]
   git flow release finish <release>
   ```
+
   For release branches, the `<base>` arg must be a commit on `develop`.
 
-* To list/start/finish hotfix branches, use:
+- To list/start/finish hotfix branches, use:
+
   ```bash
   git flow hotfix
   git flow hotfix start <release> [<base>]
   git flow hotfix finish <release>
   ```
+
   For hotfix branches, the `<base>` arg must be a commit on `master`.
 
-* To list/start support branches, use:
+- To list/start support branches, use:
   ```bash
   git flow support
   git flow support start <release> <base>
@@ -124,9 +131,7 @@ Al declarar el TAD de la "_shared memory_" teniamos un error que no nos perimiti
 
 ### Problema 3
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque ac erat nunc. Nulla arcu tellus, pharetra ut tempor in, facilisis id tellus. Aliquam pulvinar dui sit amet mauris lacinia, dictum vehicula lectus fringilla. Donec id odio euismod, blandit ex quis, efficitur nunc. Aliquam non justo hendrerit, lobortis justo nec, ornare eros. Fusce dignissim, dolor sed fringilla egestas, nibh purus efficitur magna, in sollicitudin libero elit lobortis enim. Nam fermentum venenatis diam, vel congue odio cursus ut. Duis sapien ex, dictum sit amet sollicitudin eu, dictum non nunc. Praesent sapien enim, venenatis eget lacus quis, imperdiet euismod nisl.
-
-Vivamus in mauris faucibus, cursus ex at, porttitor libero. Integer accumsan enim at orci pharetra luctus. Nam porttitor arcu quis sapien dictum cursus. Maecenas sit amet suscipit metus. Sed nunc nunc, venenatis quis dignissim ornare, dapibus ac elit. Etiam a mi odio. Mauris sit amet consectetur neque, eu mattis justo.
+Más en el comienzo del desarrollo, tuvimos un problema con el uso de 'select', el programa quedaba colgado en el select. Resulta que el slave no estaba escribiendo sus resultados correctamente en el pipe, printf no lograba escribir en el fd 1 (que estaba mapeado al pipe). Finalmente logramos solucionarlo mediante setvbuffer().
 
 ## Decisiones tomadas
 
