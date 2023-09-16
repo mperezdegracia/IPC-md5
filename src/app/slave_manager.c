@@ -13,9 +13,8 @@ struct slave_manager_cdt {
 	int* active_files;
 
 	int qfiles_sent;
-	int av_files;
+	int av_slaves;
 	int ret_files;
-	int max_fd;
 
 	char* has_data;
 	/* data */
@@ -25,6 +24,9 @@ static void _error_free_exit(SlaveManager adt, char* msg);
 static void _send_file(SlaveManager adt, int idx);
 static void _close_extra_pipes(int idx, SlaveManager adt);
 static int _get_id_withdata(SlaveManager adt);
+
+fd_set set;
+int maxfd = 0;
 
 void free_adt(SlaveManager adt) {
 	if (adt == NULL)
@@ -69,7 +71,7 @@ SlaveManager new_manager(char** filenames, int count, int qslaves) {
 
 	sm->has_data = calloc(qslaves, sizeof(char));
 	if (sm->has_data == NULL)
-		_error_free_exit(sm, "malloc");
+		_error_free_exit(sm, "calloc");
 
 	sm->slave_pids = malloc(sizeof(int) * qslaves);
 	if (sm->slave_pids == NULL)
@@ -85,7 +87,7 @@ SlaveManager new_manager(char** filenames, int count, int qslaves) {
 
 	sm->active_files = calloc(qslaves, sizeof(int));
 	if (sm->active_files == NULL)
-		_error_free_exit(sm, "Memory allocation error");
+		_error_free_exit(sm, "calloc");
 
 	return sm;
 }
@@ -131,12 +133,9 @@ void init_slaves(SlaveManager adt) {
 
 				adt->fd_read[i] = sm[READ];
 				adt->fd_write[i] = ms[WRITE];
-				if (adt->fd_read[i] > adt->max_fd)
-					adt->max_fd = adt->fd_read[i];
-
 				adt->slave_pids[i] = pid;
-				_send_file(adt, i);
-				_send_file(adt, i);
+				for (int j = 0; j < 5; j++)
+					_send_file(adt, i);
 			} break;
 		}
 	}
@@ -150,20 +149,20 @@ int ret_file(SlaveManager adt, char* buf) {
 	if (buf == NULL || adt == NULL)
 		_error_free_exit(adt, "ret_file");
 
-	if (adt->av_files <= 0) {
-		fd_set set;
-
+	if (adt->av_slaves <= 0) {
 		// si no hay data disponible -> toca usar select y quedar bloqueado hasta que termine algún slave
 		FD_ZERO(&set);
 
-		for (int i = 0; i < adt->qslaves; i++)
+		for (int i = 0; i < adt->qslaves; i++) {
 			FD_SET(adt->fd_read[i], &set);
+			maxfd = maxfd >= adt->fd_read[i] ? maxfd : adt->fd_read[i];
+		}
 
-		int q_fds = select(adt->max_fd + 1, &set, NULL, NULL, NULL);
+		int q_fds = select(maxfd + 1, &set, NULL, NULL, NULL);
 		if (q_fds == ERROR)
 			_error_free_exit(adt, "select");
 
-		adt->av_files = q_fds;
+		adt->av_slaves = q_fds;
 
 		for (int i = 0; i < adt->qslaves; i++) {
 			if (FD_ISSET(adt->fd_read[i], &set))
@@ -172,22 +171,23 @@ int ret_file(SlaveManager adt, char* buf) {
 	}
 
 	int idx = _get_id_withdata(adt);
+	if (idx == -1)
+		return 0;
 
 	// vamos a consumir
 	adt->has_data[idx] = 0;
-	adt->av_files -= 1;
+	adt->av_slaves -= 1;
 	adt->ret_files += 1;
 
-	int i = 0;
 	int read_bytes = read(adt->fd_read[idx], buf, BUF_SIZE - 2);
 
+	int i = 0;
 	for (i = 0; i < read_bytes && buf[i] != '\n'; i++)
 		continue;
 	buf[i] = '\0';
 
 	adt->active_files[idx] -= 1;
 
-	printf("active_files = %d \n", adt->active_files[idx]);
 	if (adt->qfiles_sent < adt->qfiles && adt->active_files[idx] == 0)
 		_send_file(adt, idx);
 
@@ -203,12 +203,14 @@ static void _error_free_exit(SlaveManager adt, char* msg) {
 static void _send_file(SlaveManager adt, int idx) {
 	if (adt == NULL || idx < 0)
 		_error_free_exit(adt, "_send_file");
+	if (adt->qfiles_sent >= adt->qfiles)
+		return;
 
 	int size = strlen(adt->filenames[adt->qfiles_sent]);
 	if (write(adt->fd_write[idx], adt->filenames[adt->qfiles_sent], size) != size)
 		fprintf(stderr, "Write not working");
-
 	write(adt->fd_write[idx], "\n", 1);
+
 	adt->qfiles_sent++;
 	adt->active_files[idx] += 1;
 }

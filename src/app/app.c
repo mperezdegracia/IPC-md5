@@ -43,7 +43,6 @@ int main(int argc, char *argv[]) {
 	while (has_next_file(sm)) {
 		char buf[BUF_SIZE] = {0};
 		pid = ret_file(sm, buf);
-		dprintf(2, "%s ", buf);
 		len = sprintf(send, "%i  %s", pid, buf);
 		sm_write(shm, send, len);
 		fprintf(out, "%s\n", send);
