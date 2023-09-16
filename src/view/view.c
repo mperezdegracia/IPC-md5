@@ -39,6 +39,5 @@ int main(int argc, char* argv[]) {
 	}
 
 	sm_close(sm);
-
 	return 0;
 }

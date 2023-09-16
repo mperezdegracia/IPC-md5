@@ -14,7 +14,7 @@
 #define PATH_SIZE 30
 
 struct shared_memory_cdt {
-	sem_t wsem, rsem;
+	sem_t sem;
 	char view, eof;
 	int fd;
 	size_t widx, ridx;
@@ -40,10 +40,8 @@ SharedMemory sm_create(char* path) {
 	sm->widx = sm->ridx = 0;
 	strcpy(sm->path, path);
 
-	if (sem_init(&sm->wsem, 1, 0) == -1)
-		error_exit("sem_init-wsem");
-	if (sem_init(&sm->rsem, 1, 0) == -1)
-		error_exit("sem_init-rsem");
+	if (sem_init(&sm->sem, 1, 0) == -1)
+		error_exit("sem_init");
 
 	return sm;
 }
@@ -59,48 +57,44 @@ SharedMemory sm_join(char* path) {
 
 	// no quiero que dos procesos vista se ejecuten en simultáneo
 	if (sm->view != 0) {
+		sm->view++;  // incremento porque sm_close decrementa
 		sm_close(sm);
 		return NULL;
 	}
 	sm->view++;
-
 	return sm;
 }
 
 void sm_write(SharedMemory self, char* buf, int size) {
 	memcpy(self->buf + self->widx, buf, size + 1);
 	self->widx += size + 1;
-	if (sem_post(&self->wsem) == -1)
-		error_exit("sem_post-wsem");
+	if (sem_post(&self->sem) == -1)
+		error_exit("sem_post");
 }
 
 int sm_read(SharedMemory self, char* buf) {
-	if (self->eof)
-		return 0;
-	if (sem_wait(&self->wsem) == -1)
-		error_exit("sem_wait-wsem");
+	if (sem_wait(&self->sem) == -1)
+		error_exit("sem_wait");
 	int len = get_line(self->buf + self->ridx, buf);
 	self->ridx += len + 1;
 	return len;
 }
 
 char sm_eof(SharedMemory self) {
-	return self->eof;
+	// se termino de leer cuando el writer no escribe mas y se consumio todo lo existente
+	return self->eof && self->widx == self->ridx;
 }
 
 void sm_destroy(SharedMemory self) {
+	// el writer ya no seguirá escribiendo
 	self->eof = 1;
-	if (sem_wait(&self->rsem) == -1)
-		error_exit("sem_wait");
 
 	char path[PATH_SIZE];
 	strcpy(path, self->path);
 	int fd = self->fd;
 
-	if (sem_destroy(&self->wsem) == -1)
-		error_exit("sem_close-wsem");
-	if (sem_destroy(&self->rsem) == -1)
-		error_exit("sem_close-rsem");
+	if (sem_destroy(&self->sem) == -1)
+		error_exit("sem_destroy");
 	if (munmap(self, sizeof(struct shared_memory_cdt)) == -1)
 		error_exit("munmap");
 	if (shm_unlink(path) == -1)
@@ -112,13 +106,10 @@ void sm_destroy(SharedMemory self) {
 void sm_close(SharedMemory self) {
 	int fd = self->fd;
 
-	if (sem_post(&self->rsem) == -1)
-		error_exit("sem_post");
+	if (sem_destroy(&self->sem) == -1)
+		error_exit("sem_destroy");
 
-	if (sem_destroy(&self->wsem) == -1)
-		error_exit("sem_close-wsem");
-	if (sem_destroy(&self->rsem) == -1)
-		error_exit("sem_close-rsem");
+	self->view--;
 	if (munmap(self, sizeof(struct shared_memory_cdt)) == -1)
 		error_exit("munmap");
 	if (close(fd) == -1)

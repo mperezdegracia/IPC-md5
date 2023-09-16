@@ -30,6 +30,8 @@ int main(int argc, char *argv[]) {
 	init_slaves(sm);
 
 	FILE *out = fopen(OUTPUT_FILE, "w");
+	if (out == NULL)
+		error_exit("fopen");
 
 	// espero para que se conecte la view
 	sleep(2);
