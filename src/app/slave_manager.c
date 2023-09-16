@@ -10,6 +10,8 @@ struct slave_manager_cdt {
 	int* fd_read;
 	int* fd_write;
 
+	int* active_files;
+
 	int qfiles_sent;
 	int av_files;
 	int ret_files;
@@ -32,6 +34,7 @@ void free_adt(SlaveManager adt) {
 	int read_flag = adt->fd_read != NULL;
 	int slave_flag = adt->slave_pids != NULL;
 	int data_flag = adt->has_data != NULL;
+	int active_flag = adt->active_files != NULL;
 
 	for (int i = 0; i < adt->qslaves && write_flag && read_flag; i++) {
 		close(adt->fd_write[i]);
@@ -46,6 +49,8 @@ void free_adt(SlaveManager adt) {
 		free(adt->fd_write);
 	if (read_flag)
 		free(adt->fd_read);
+	if (active_flag)
+		free(adt->active_files);
 
 	free(adt);
 }
@@ -76,6 +81,10 @@ SlaveManager new_manager(char** filenames, int count, int qslaves) {
 
 	sm->fd_write = malloc(sizeof(int) * qslaves);
 	if (sm->fd_write == NULL)
+		_error_free_exit(sm, "Memory allocation error");
+
+	sm->active_files = calloc(qslaves, sizeof(int));
+	if (sm->active_files == NULL)
 		_error_free_exit(sm, "Memory allocation error");
 
 	return sm;
@@ -126,6 +135,7 @@ void init_slaves(SlaveManager adt) {
 					adt->max_fd = adt->fd_read[i];
 
 				adt->slave_pids[i] = pid;
+				_send_file(adt, i);
 				_send_file(adt, i);
 			} break;
 		}
@@ -178,7 +188,9 @@ int ret_file(SlaveManager adt, char* buf) {
 		continue;
 	buf[i] = '\0';
 
-	if (adt->qfiles_sent < adt->qfiles)
+	adt->active_files[idx] -= 1;
+
+	if (adt->qfiles_sent < adt->qfiles && adt->active_files[idx] == 0)
 		_send_file(adt, idx);
 
 	// return i;  // cuanto se escribió en el buffer
@@ -200,6 +212,7 @@ static void _send_file(SlaveManager adt, int idx) {
 
 	write(adt->fd_write[idx], "\n", 1);
 	adt->qfiles_sent++;
+	adt->active_files[idx] += 1;
 }
 
 static void _close_extra_pipes(int idx, SlaveManager adt) {
