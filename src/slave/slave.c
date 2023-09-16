@@ -17,14 +17,11 @@ int main(int argc, char *argv[]) {
 	char *md5 = "md5sum ";
 	int md5len = strlen(md5);
 
-	int pid = getpid();
-
 	char filepath[BUF_SIZE];
 	char command[BUF_SIZE + md5len];
 	char output[BUF_SIZE];
 
 	while (fgets(filepath, sizeof(filepath), stdin) != NULL) {
-		// fprintf(stderr, "%d - %s", pid, filepath);
 		sprintf(command, "%s%s", md5, filepath);
 		p = popen(command, "r");
 		if (p == NULL)
