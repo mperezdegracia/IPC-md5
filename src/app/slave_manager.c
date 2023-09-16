@@ -57,11 +57,11 @@ void free_adt(SlaveManager adt) {
 
 SlaveManager new_manager(char** filenames, int count, int qslaves) {
 	if (count < 1 || filenames == NULL)
-		error_exit("invalid parameters");
+		error_exit("new_manager");
 
 	SlaveManager sm = calloc(1, sizeof(struct slave_manager_cdt));
 	if (sm == NULL)
-		error_exit("Memory allocation error");
+		error_exit("calloc");
 
 	sm->filenames = filenames;
 	sm->qfiles = count;
@@ -69,19 +69,19 @@ SlaveManager new_manager(char** filenames, int count, int qslaves) {
 
 	sm->has_data = calloc(qslaves, sizeof(char));
 	if (sm->has_data == NULL)
-		_error_free_exit(sm, "Memory allocation error");
+		_error_free_exit(sm, "malloc");
 
 	sm->slave_pids = malloc(sizeof(int) * qslaves);
 	if (sm->slave_pids == NULL)
-		_error_free_exit(sm, "Memory allocation error");
+		_error_free_exit(sm, "malloc");
 
 	sm->fd_read = malloc(sizeof(int) * qslaves);
 	if (sm->fd_read == NULL)
-		_error_free_exit(sm, "Memory allocation error");
+		_error_free_exit(sm, "malloc");
 
 	sm->fd_write = malloc(sizeof(int) * qslaves);
 	if (sm->fd_write == NULL)
-		_error_free_exit(sm, "Memory allocation error");
+		_error_free_exit(sm, "malloc");
 
 	sm->active_files = calloc(qslaves, sizeof(int));
 	if (sm->active_files == NULL)
@@ -92,7 +92,7 @@ SlaveManager new_manager(char** filenames, int count, int qslaves) {
 
 void init_slaves(SlaveManager adt) {
 	if (adt == NULL)
-		error_exit("invalid parameters");
+		error_exit("init_slaves");
 
 	for (int i = 0; i < adt->qslaves; i++) {
 		int sm[2];  // slave to master
@@ -179,11 +179,8 @@ int ret_file(SlaveManager adt, char* buf) {
 	adt->ret_files += 1;
 
 	int i = 0;
-
-	// while ((read(adt->fd_read[idx], &c, 1) > 0) && c != '\n' && c != '\0' && i < (BUF_SIZE - 2))
-	// 	buf[i++] = c;
-	// buf[i++] = '\0';
 	int read_bytes = read(adt->fd_read[idx], buf, BUF_SIZE - 2);
+
 	for (i = 0; i < read_bytes && buf[i] != '\n'; i++)
 		continue;
 	buf[i] = '\0';
