@@ -190,6 +190,7 @@ int ret_file(SlaveManager adt, char* buf) {
 
 	adt->active_files[idx] -= 1;
 
+	printf("active_files = %d \n", adt->active_files[idx]);
 	if (adt->qfiles_sent < adt->qfiles && adt->active_files[idx] == 0)
 		_send_file(adt, idx);
 

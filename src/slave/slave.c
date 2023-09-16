@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "utils.h"
 
@@ -22,15 +23,14 @@ int main(int argc, char *argv[]) {
 
 	while (fgets(filepath, sizeof(filepath), stdin) != NULL) {
 		sprintf(command, "%s%s", md5, filepath);
+		sleep(1);
 		p = popen(command, "r");
 		if (p == NULL)
 			error_exit("popen");
 
 		while (fgets(output, sizeof(output), p) != NULL)
 			printf("%s", output);
-
 		pclose(p);
 	}
-
 	return 0;
 }
