@@ -1,0 +1,26 @@
+{
+    "files.associations": {
+        "types.h": "c",
+        "wait.h": "c",
+        "string.h": "c",
+        "stdlib.h": "c",
+        "unistd.h": "c",
+        "slavemanager.h": "c",
+        "cstdlib": "c",
+        "slave_manager.h": "c",
+        "select.h": "c",
+        "stdio.h": "c",
+        "atomic": "c",
+        "*.tcc": "c",
+        "cmath": "c",
+        "string": "c",
+        "unordered_map": "c",
+        "random": "c",
+        "functional": "c",
+        "limits": "c",
+        "streambuf": "c",
+        "tuple": "c",
+        "type_traits": "c"
+    },
+    "editor.formatOnSave": true
+}
