@@ -7,6 +7,7 @@
   - [Inicializando un gitflow repo](#inicializando-un-gitflow-repo)
   - [Manejando ramas](#manejando-ramas)
 - [Compilando](#compilando)
+- [Ejecutando](#ejecutando)
 - [Problemas encontrados](#problemas-encontrados)
   - [Shared Memory](#shared-memory)
   - [Punteros en memoria compartida](#punteros-en-memoria-compartida)
