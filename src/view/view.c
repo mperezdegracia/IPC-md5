@@ -27,17 +27,10 @@ int main(int argc, char* argv[]) {
 	}
 
 	SharedMemory sm = sm_join(filename);
-	if (sm == NULL) {
-		fprintf(stderr, "Only one view can be called\n");
-		exit(1);
-	}
-
 	char buf[BUF_SIZE];
 
-	while (!sm_eof(sm)) {
-		if (sm_read(sm, buf) != 0)
-			puts(buf);
-	}
+	while (sm_read(sm, buf) != 0)
+		puts(buf);
 
 	sm_close(sm);
 	return 0;

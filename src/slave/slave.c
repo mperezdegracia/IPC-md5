@@ -29,7 +29,7 @@ void md5(char *filename, char *output, int size) {
 	FILE *p;
 	char command[BUF_SIZE * 2];
 
-	snprintf(command, sizeof(command), "md5sum ./%s", filename);
+	snprintf(command, sizeof(command), "md5sum %s", filename);
 	p = popen(command, "r");
 	if (p == NULL)
 		ERROR_EXIT("popen");

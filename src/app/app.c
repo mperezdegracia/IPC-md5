@@ -49,6 +49,8 @@ int main(int argc, char *argv[]) {
 		fprintf(out, "%s\n", send);
 	}
 
+	// send EOF and destroy
+	sm_write(shm, "", strlen(""));
 	sm_destroy(shm);
 	free_adt(sm);
 	fclose(out);
