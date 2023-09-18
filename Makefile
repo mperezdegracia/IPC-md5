@@ -1,6 +1,5 @@
 CC=gcc
-CFLAGS=-Wall -pedantic
-CFLAGS+=-Iinclude
+CFLAGS=-Wall -pedantic -Iinclude
 
 # Descomentar para debuguear
 # CFLAGS+=-g

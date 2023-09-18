@@ -10,21 +10,22 @@
 
 int main(int argc, char* argv[]) {
 	if (setvbuf(stdin, NULL, _IONBF, 0) != 0)
-		error_exit("setvbuf/stdin");
+		ERROR_EXIT("setvbuf/stdin");
 	if (setvbuf(stdout, NULL, _IONBF, 0) != 0)
-		error_exit("setvbuf/stdout");
+		ERROR_EXIT("setvbuf/stdout");
 
 	char filename[BUF_SIZE];
 	if (argc == 1) {
-		scanf("%s", filename);
+		char format[10];
+		sprintf(format, "%%%ds", BUF_SIZE - 1);
+		scanf(format, filename);
 	} else if (argc == 2) {
-		strcpy(filename, argv[1]);
+		strncpy(filename, argv[1], BUF_SIZE - 1);
 	} else {
 		fprintf(stderr, "Called view with wrong parameters");
 		exit(1);
 	}
 
-	// sleep(4);
 	SharedMemory sm = sm_join(filename);
 	if (sm == NULL) {
 		fprintf(stderr, "Only one view can be called\n");

@@ -23,17 +23,15 @@ struct shared_memory_cdt {
 };
 
 SharedMemory sm_create(char* path) {
-	shm_unlink(path);
-
-	int fd = shm_open(path, O_CREAT | O_RDWR | O_EXCL, S_IRUSR | S_IWUSR);
+	int fd = shm_open(path, O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR);
 	if (fd == -1)
-		error_exit("shm_open");
+		ERROR_EXIT("shm_open");
 	if (ftruncate(fd, sizeof(struct shared_memory_cdt)) == -1)
-		error_exit("ftruncate");
+		ERROR_EXIT("ftruncate");
 
 	SharedMemory sm = mmap(NULL, sizeof(struct shared_memory_cdt), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 	if (sm == MAP_FAILED)
-		error_exit("mmap");
+		ERROR_EXIT("mmap");
 
 	sm->view = sm->eof = 0;
 	sm->fd = fd;
@@ -41,7 +39,7 @@ SharedMemory sm_create(char* path) {
 	strcpy(sm->path, path);
 
 	if (sem_init(&sm->sem, 1, 0) == -1)
-		error_exit("sem_init");
+		ERROR_EXIT("sem_init");
 
 	return sm;
 }
@@ -49,11 +47,11 @@ SharedMemory sm_create(char* path) {
 SharedMemory sm_join(char* path) {
 	int fd = shm_open(path, O_RDWR, 0);
 	if (fd == -1)
-		error_exit("shm_open");
+		ERROR_EXIT("shm_open");
 
 	SharedMemory sm = mmap(NULL, sizeof(struct shared_memory_cdt), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 	if (sm == MAP_FAILED)
-		error_exit("mmap");
+		ERROR_EXIT("mmap");
 
 	// no quiero que dos procesos vista se ejecuten en simultáneo
 	if (sm->view != 0) {
@@ -69,12 +67,12 @@ void sm_write(SharedMemory self, char* buf, int size) {
 	memcpy(self->buf + self->widx, buf, size + 1);
 	self->widx += size + 1;
 	if (sem_post(&self->sem) == -1)
-		error_exit("sem_post");
+		ERROR_EXIT("sem_post");
 }
 
 int sm_read(SharedMemory self, char* buf) {
 	if (sem_wait(&self->sem) == -1)
-		error_exit("sem_wait");
+		ERROR_EXIT("sem_wait");
 	int len = get_line(self->buf + self->ridx, buf);
 	self->ridx += len + 1;
 	return len;
@@ -94,24 +92,24 @@ void sm_destroy(SharedMemory self) {
 	int fd = self->fd;
 
 	if (sem_destroy(&self->sem) == -1)
-		error_exit("sem_destroy");
+		ERROR_EXIT("sem_destroy");
 	if (munmap(self, sizeof(struct shared_memory_cdt)) == -1)
-		error_exit("munmap");
+		ERROR_EXIT("munmap");
 	if (shm_unlink(path) == -1)
-		error_exit("shm_unlink");
+		ERROR_EXIT("shm_unlink");
 	if (close(fd) == -1)
-		error_exit("close");
+		ERROR_EXIT("close");
 }
 
 void sm_close(SharedMemory self) {
 	int fd = self->fd;
 
 	if (sem_destroy(&self->sem) == -1)
-		error_exit("sem_destroy");
+		ERROR_EXIT("sem_destroy");
 
 	self->view--;
 	if (munmap(self, sizeof(struct shared_memory_cdt)) == -1)
-		error_exit("munmap");
+		ERROR_EXIT("munmap");
 	if (close(fd) == -1)
-		error_exit("close");
+		ERROR_EXIT("close");
 }

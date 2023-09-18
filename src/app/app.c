@@ -21,9 +21,9 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (setvbuf(stdin, NULL, _IONBF, 0) != 0)
-		error_exit("setvbuf/stdin");
+		ERROR_EXIT("setvbuf/stdin");
 	if (setvbuf(stdout, NULL, _IONBF, 0) != 0)
-		error_exit("setvbuf/stdout");
+		ERROR_EXIT("setvbuf/stdout");
 
 	SharedMemory shm = sm_create(SHM_PATH);
 	puts(SHM_PATH);
@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
 
 	FILE *out = fopen(OUTPUT_FILE, "w");
 	if (out == NULL)
-		error_exit("fopen");
+		ERROR_EXIT("fopen");
 
 	// espero para que se conecte la view
 	sleep(2);

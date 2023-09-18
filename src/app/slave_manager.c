@@ -2,6 +2,12 @@
 
 #include "utils.h"
 
+#define ERROR_FREE_EXIT(adt, msg) \
+	{                             \
+		free_adt(adt);            \
+		ERROR_EXIT(msg);          \
+	}
+
 struct slave_manager_cdt {
 	char** filenames;
 	int qfiles;
@@ -20,7 +26,6 @@ struct slave_manager_cdt {
 	/* data */
 };
 
-static void _error_free_exit(SlaveManager adt, char* msg);
 static void _send_file(SlaveManager adt, int idx);
 static void _close_extra_pipes(int idx, SlaveManager adt);
 static int _get_id_withdata(SlaveManager adt);
@@ -59,11 +64,11 @@ void free_adt(SlaveManager adt) {
 
 SlaveManager new_manager(char** filenames, int count, int qslaves, int files_per_slave) {
 	if (count < 1 || filenames == NULL)
-		error_exit("new_manager");
+		ERROR_EXIT("new_manager");
 
 	SlaveManager sm = calloc(1, sizeof(struct slave_manager_cdt));
 	if (sm == NULL)
-		error_exit("calloc");
+		ERROR_EXIT("calloc");
 
 	sm->filenames = filenames;
 	sm->qfiles = count;
@@ -72,48 +77,48 @@ SlaveManager new_manager(char** filenames, int count, int qslaves, int files_per
 
 	sm->has_data = calloc(qslaves, sizeof(char));
 	if (sm->has_data == NULL)
-		_error_free_exit(sm, "calloc");
+		ERROR_FREE_EXIT(sm, "calloc");
 
 	sm->slave_pids = malloc(sizeof(int) * qslaves);
 	if (sm->slave_pids == NULL)
-		_error_free_exit(sm, "malloc");
+		ERROR_FREE_EXIT(sm, "malloc");
 
 	sm->fd_read = malloc(sizeof(int) * qslaves);
 	if (sm->fd_read == NULL)
-		_error_free_exit(sm, "malloc");
+		ERROR_FREE_EXIT(sm, "malloc");
 
 	sm->fd_write = malloc(sizeof(int) * qslaves);
 	if (sm->fd_write == NULL)
-		_error_free_exit(sm, "malloc");
+		ERROR_FREE_EXIT(sm, "malloc");
 
 	sm->active_files = calloc(qslaves, sizeof(int));
 	if (sm->active_files == NULL)
-		_error_free_exit(sm, "calloc");
+		ERROR_FREE_EXIT(sm, "calloc");
 
 	return sm;
 }
 
 void init_slaves(SlaveManager adt) {
 	if (adt == NULL)
-		error_exit("init_slaves");
+		ERROR_EXIT("init_slaves");
 
 	for (int i = 0; i < adt->qslaves; i++) {
 		int sm[2];  // slave to master
 		int ms[2];  // master to slave
 
 		if (pipe(sm) == -1 || pipe(ms) == -1)
-			_error_free_exit(adt, "pipe");
+			ERROR_FREE_EXIT(adt, "pipe");
 
 		int pid = fork();
 
 		switch (pid) {
 			case ERROR: {
-				_error_free_exit(adt, "fork");
+				ERROR_FREE_EXIT(adt, "fork");
 			} break;
 
 			case CHILD: {
 				if (close(ms[WRITE]) == -1 || close(sm[READ]) == -1)
-					_error_free_exit(adt, "close");
+					ERROR_FREE_EXIT(adt, "close");
 
 				_close_extra_pipes(i, adt);
 
@@ -125,12 +130,12 @@ void init_slaves(SlaveManager adt) {
 				char* argv[] = {"./build/slave", NULL};
 				execve("./build/slave", argv, NULL);
 
-				_error_free_exit(adt, "execve");
+				ERROR_FREE_EXIT(adt, "execve");
 			} break;
 
 			default: {
 				if (close(sm[WRITE]) == -1 || close(ms[READ]) == -1)
-					_error_free_exit(adt, "close");
+					ERROR_FREE_EXIT(adt, "close");
 
 				adt->fd_read[i] = sm[READ];
 				adt->fd_write[i] = ms[WRITE];
@@ -148,7 +153,7 @@ int has_next_file(SlaveManager adt) {
 
 int ret_file(SlaveManager adt, char* buf) {
 	if (buf == NULL || adt == NULL)
-		_error_free_exit(adt, "ret_file");
+		ERROR_FREE_EXIT(adt, "ret_file");
 
 	if (adt->av_slaves <= 0) {
 		// si no hay data disponible -> toca usar select y quedar bloqueado hasta que termine algún slave
@@ -161,7 +166,7 @@ int ret_file(SlaveManager adt, char* buf) {
 
 		int q_fds = select(maxfd + 1, &set, NULL, NULL, NULL);
 		if (q_fds == ERROR)
-			_error_free_exit(adt, "select");
+			ERROR_FREE_EXIT(adt, "select");
 
 		adt->av_slaves = q_fds;
 
@@ -192,18 +197,12 @@ int ret_file(SlaveManager adt, char* buf) {
 	if (adt->qfiles_sent < adt->qfiles && adt->active_files[idx] == 0)
 		_send_file(adt, idx);
 
-	// return i;  // cuanto se escribió en el buffer
 	return adt->slave_pids[idx];  // pid del esclavo
-}
-
-static void _error_free_exit(SlaveManager adt, char* msg) {
-	free_adt(adt);
-	error_exit(msg);
 }
 
 static void _send_file(SlaveManager adt, int idx) {
 	if (adt == NULL || idx < 0)
-		_error_free_exit(adt, "_send_file");
+		ERROR_FREE_EXIT(adt, "_send_file");
 	if (adt->qfiles_sent >= adt->qfiles)
 		return;
 
@@ -219,7 +218,7 @@ static void _send_file(SlaveManager adt, int idx) {
 static void _close_extra_pipes(int idx, SlaveManager adt) {
 	for (int i = 0; i < idx; i++) {
 		if (close(adt->fd_read[i]) == -1 || close(adt->fd_write[i]) == -1)
-			_error_free_exit(adt, "close");
+			ERROR_FREE_EXIT(adt, "close");
 	}
 }
 
