@@ -9,9 +9,10 @@
 #include "slave_manager.h"
 #include "utils.h"
 
-#define SLAVES_QTY  5
-#define OUTPUT_FILE "tpe_so_output.txt"
-#define SHM_PATH    "/shm_tpe_so"
+#define SLAVES_QTY      5
+#define FILES_PER_SLAVE 5
+#define OUTPUT_FILE     "tpe_so_output.txt"
+#define SHM_PATH        "/shm_tpe_so"
 
 int main(int argc, char *argv[]) {
 	if (argc <= 1) {
@@ -27,7 +28,7 @@ int main(int argc, char *argv[]) {
 	SharedMemory shm = sm_create(SHM_PATH);
 	puts(SHM_PATH);
 
-	SlaveManager sm = new_manager(argv + 1, argc - 1, SLAVES_QTY);
+	SlaveManager sm = new_manager(argv + 1, argc - 1, SLAVES_QTY, FILES_PER_SLAVE);
 	init_slaves(sm);
 
 	FILE *out = fopen(OUTPUT_FILE, "w");

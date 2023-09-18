@@ -1,7 +1,6 @@
 #ifndef __SLAVE_MANAGER_H__
 #define __SLAVE_MANAGER_H__
 
-/* Standard library */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,7 +16,7 @@
 
 typedef struct slave_manager_cdt* SlaveManager;
 
-SlaveManager new_manager(char** filenames, int count, int qslaves);
+SlaveManager new_manager(char** filenames, int count, int qslaves, int files_per_slave);
 void init_slaves(SlaveManager adt);
 void free_adt(SlaveManager adt);
 int has_next_file(SlaveManager adt);

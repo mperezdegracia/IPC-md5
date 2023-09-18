@@ -154,4 +154,4 @@ No utilizamos ninguna fuente externa aparte del "_man page_". Basamos partes de 
 
 ## Diagrama
 
-![Diagrama](misc/diagrama_tp1so.png)
+![Diagrama](assets/pictures/diagrama_tp1so.png)

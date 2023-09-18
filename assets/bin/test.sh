@@ -1,13 +1,6 @@
 #!/bin/bash
 
-
-# Create a test folder if it doesn't exist
-mkdir -p assets/bin/test_files
-
-# Create test files with predefined names
-for i in {1..10}; do
-    filename="assets/bin/test_files/file$i.txt"
-    echo "This is a test file $i" > $filename
+for i in {1..30}; do
+    mkdir -p test
+    eval echo {1..$i} > test/file_$i.txt
 done
-
-echo "Test files created in the test_files folder."

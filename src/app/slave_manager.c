@@ -6,16 +6,16 @@ struct slave_manager_cdt {
 	char** filenames;
 	int qfiles;
 	int qslaves;
+	int files_per_slave;
 	int* slave_pids;
 	int* fd_read;
 	int* fd_write;
-
-	int* active_files;
 
 	int qfiles_sent;
 	int av_slaves;
 	int ret_files;
 
+	int* active_files;
 	char* has_data;
 	/* data */
 };
@@ -57,7 +57,7 @@ void free_adt(SlaveManager adt) {
 	free(adt);
 }
 
-SlaveManager new_manager(char** filenames, int count, int qslaves) {
+SlaveManager new_manager(char** filenames, int count, int qslaves, int files_per_slave) {
 	if (count < 1 || filenames == NULL)
 		error_exit("new_manager");
 
@@ -68,6 +68,7 @@ SlaveManager new_manager(char** filenames, int count, int qslaves) {
 	sm->filenames = filenames;
 	sm->qfiles = count;
 	sm->qslaves = qslaves;
+	sm->files_per_slave = files_per_slave;
 
 	sm->has_data = calloc(qslaves, sizeof(char));
 	if (sm->has_data == NULL)
@@ -134,7 +135,7 @@ void init_slaves(SlaveManager adt) {
 				adt->fd_read[i] = sm[READ];
 				adt->fd_write[i] = ms[WRITE];
 				adt->slave_pids[i] = pid;
-				for (int j = 0; j < 5; j++)
+				for (int j = 0; j < adt->files_per_slave; j++)
 					_send_file(adt, i);
 			} break;
 		}
