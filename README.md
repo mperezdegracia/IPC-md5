@@ -13,9 +13,9 @@
   - [Uso de select](#uso-de-select)
 - [Decisiones tomadas](#decisiones-tomadas)
   - [TADs](#tads)
-  - [Organización](#organizacion)
+  - [Organización](#organización)
 - [Limitaciones](#limitaciones)
-- [Código reutilizado](#codigo-reutilizado)
+- [Código reutilizado](#código-reutilizado)
 - [Diagrama](#diagrama)
 
 ## Requerimientos
@@ -112,33 +112,53 @@ Para compilar el proyecto es tan sencillo como correr el script `compile.sh` que
 $ ./compile.sh
 ```
 
+## Ejecutando
+
+Para ejecutar el proyecto se debe correr el programa `app` enviando como parámetros la ubicación de los archivos sobre los que se desea trabajar.
+
+```bash
+$ ./build/app [FILES...]
+```
+
+Este creará un espacio de _shared memory_ para comunicarse con un posible proceso vista. La ubicación de este espacio de memoria es el único mensaje que el proceso `app` envía por salida estándar y dicha ubicación es la que debe utilizar el proceso **vista** para conectarse al espacio de memoria compartida. Para esto puede realizarse por medio de un _pipe_ o por parámetro.
+
+```bash
+$ ./build/app [FILES...] | ./build/view
+$ ./build/view [PATH]
+```
+
+A modo de testeo, bajo la carpeta `assets/bin` se encuentra un _script_ de **bash** para crear una serie de archivos en una carpeta `test` con contenidos variados para crear utilizar junto con los procesos del proyecto.
+
+```bash
+$ ./assets/bin/test.sh
+$ ./build/app test/* | ./build/view
+```
+
 ## Problemas encontrados
 
 ### Shared memory
 
-Al estar investigando acerca del tema de "_shared memory_", pudimos entender varios aspectos del tema. Implementarlo en el proyecto no tuvo mucho problema más que utilizamos las syscalls que quedaron obsoletas con el paso del tiempo, como pueden ser "_shmget_", "_shmat_" o "_shmdt_". Por esta razón, tuvimos que cambiar las funciones creadas y usar syscalls tales como "_shmopen_" y "_mmap_", que por lo que entendimos son el estándar de hoy en día.
+Al estar investigando acerca del tema de "_shared memory_", pudimos entender varios aspectos del tema. Implementarlo en el proyecto no tuvo mucho problema más que utilizamos las syscalls que quedaron obsoletas con el paso del tiempo, como pueden ser `shmget`, `shmat` o `shmdt`. Por esta razón, tuvimos que cambiar las funciones creadas y usar syscalls tales como `shm_open` y `mmap`, que son el estándar **POSIX**.
 
 El verdadero problema, vino al implementar los semáforos. Cuando incluimos los semáforos en el código descubrimos un gran problema al ejecutar la vista, este programa nunca termina. Como el proceso vista solo recibe la información necesaria para conectarse a la "_shared memory_" por entrada estándar no tenemos manera de decirle a el proceso vista cuando ya no hay más archivos para leer. Al ejecutar el programa, podíamos apreciar como había un buen funcionamiento de la shared memory entre el proceso aplicación y el proceso vista, pero cuando terminaba de imprimir los archivos, el proceso aplicación terminaba su ejecución y el proceso vista se queda esperando en el semáforo por el siguiente elemento.
 
-Nuestra primera solución a esto fue investigar la API de semáforos POSIX. Investigando, encontramos "sem_timedwait" la cual hace la espera como el semáforo que habíamos incluido anteriormente y si en un rango de tiempo (programado) el semáforo no cambia de valor, inmediatamente se termina este proceso, lo cual permite que el proceso visto pueda terminar su ejecución. Esta solución no es la correcta ya que no funciona en todos los casos. Si da la casualidad de que todos los procesos esclavos estén trabajando en un archivo muy grande, estos pueden llegar a tardar mucho tiempo lo cual llevaría a el proceso vista a terminar antes de lo debería
+Nuestra primera solución a esto fue investigar la API de semáforos **POSIX**. Investigando, encontramos `sem_timedwait` la cual hace la espera como el semáforo que habíamos incluido anteriormente y si en un rango de tiempo (programado) el semáforo no cambia de valor, inmediatamente se termina este proceso, lo cual permite que el proceso visto pueda terminar su ejecución. Esta solución no es la correcta ya que no funciona en todos los casos. Si da la casualidad de que todos los procesos esclavos estén trabajando en un archivo muy grande, estos pueden llegar a tardar mucho tiempo lo cual llevaría a el proceso vista a terminar antes de lo debería
 
 La solución final que implementamos fue incluir un "_end of file_" en el TAD del semáforo. Por lo tanto, el proceso aplicación modificara este "_end of file_" cuando allá terminado de trabajar con todos los archivos disponibles, y el proceso vista chequea en cada iteración antes de esperar en el semáforo si este "_end of file_" fue modificado o no.
-
 
 ### Punteros en memoria compartida
 
 Al declarar el TAD de la "_shared memory_" teníamos un error que no nos permitía destruir o desincronizar el bloque de memoria creado anteriormente. Tras mucho "_debugging_" descubrimos que le problema yacía dentro de la declaración de nuestra variable "_path_" dentro del TAD, la cual anteriormente era declarada como puntero. Como era declarado como puntero, al crear la memoria compartida se guardaba el valor "_path_" recibido por parámetro de esta manera. Esto es un error ya que se guardaba este parámetro de manera que apuntara a una dirección de memoria de un proceso especifico. Al querer borrar o cerrar la conexión con la memoria compartido, lanzaba un error, ya que el puntero no correspondía. La solución fue declarar esta variable como un array estático y de esta manera solucionar los errores y poder desacoplar la conexión a la memoria compartido y luego borrar el bloque.
 
-
 ### Uso de select
 
-Más en el comienzo del desarrollo, tuvimos un problema con el uso de 'select', el programa quedaba colgado en el select. Resulta que el slave no estaba escribiendo sus resultados correctamente en el pipe, printf no lograba escribir en el fd 1 (que estaba mapeado al pipe). Finalmente logramos solucionarlo mediante setvbuffer().
+Más en el comienzo del desarrollo, tuvimos un problema con el uso de `select`, el programa quedaba colgado en el `select`. Resulta que el slave no estaba escribiendo sus resultados correctamente en el `pipe`, `printf` no lograba escribir en el fd 1 (que estaba mapeado al pipe). Finalmente logramos solucionarlo mediante `setvbuffer`.
 
 ## Decisiones tomadas
 
 ### TADs
 
-Una de las decisiones más importantes que tomamos a principio del proyecto fue trabajar con dos TADs (Tipos Abstractos de Datos). Creamos dos TADs, uno para guardar la información de los esclavos y otro para la información de la memoria compartida. Al crear las librerías, tanto "_slave manager_" como "_shm lib_", se facilita mucho la modularización del código y, al crear los "_struct_" que agrupen tantas variables, el código queda mucho más limpio y agradable a la vista. También se facilita el pasaje y recibo de parámetros en diversas funciones debido a que se puede enviar y recibir la estructura como parámetro y no estar pasando parámetros individualmente.
+Una de las decisiones más importantes que tomamos a principio del proyecto fue trabajar con dos TADs (Tipos Abstractos de Datos). Creamos dos TADs, uno para guardar la información de los esclavos y otro para la información de la memoria compartida. Al crear las librerías, tanto `slave_manager` como `shm_lib`, se facilita mucho la modularización del código y, al crear los `struct` que agrupen tantas variables, el código queda mucho más limpio y agradable a la vista. También se facilita el pasaje y recibo de parámetros en diversas funciones debido a que se puede enviar y recibir la estructura como parámetro y no estar pasando parámetros individualmente.
 
 ### Organización
 
@@ -150,7 +170,7 @@ En cuanto a limitaciones del proyecto, simplemente tuvimos muy en cuenta lo pedi
 
 ## Código reutilizado
 
-No utilizamos ninguna fuente externa aparte del "_man page_". Basamos partes de nuestro código en los ejemplos que proporciona este "_man page_", más notablemente, para la realización de la librería de "_shared memory_" tomamos mucha inspiración del código de ejemplo que proporciona acerca de "_shmopen_".
+No utilizamos ninguna fuente externa aparte del "_man page_". Basamos partes de nuestro código en los ejemplos que proporciona este "_man page_", más notablemente, para la realización de la librería de "_shared memory_" tomamos mucha inspiración del código de ejemplo que proporciona acerca de `shm_open`.
 
 ## Diagrama
 
