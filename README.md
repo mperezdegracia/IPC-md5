@@ -145,7 +145,7 @@ El verdadero problema, vino al implementar los semáforos. Cuando incluimos los 
 
 Nuestra primera solución a esto fue investigar la API de semáforos **POSIX**. Investigando, encontramos `sem_timedwait` la cual hace la espera como el semáforo que habíamos incluido anteriormente y si en un rango de tiempo (programado) el semáforo no cambia de valor, inmediatamente se termina este proceso, lo cual permite que el proceso visto pueda terminar su ejecución. Esta solución no es la correcta ya que no funciona en todos los casos. Si da la casualidad de que todos los procesos esclavos estén trabajando en un archivo muy grande, estos pueden llegar a tardar mucho tiempo lo cual llevaría a el proceso vista a terminar antes de lo debería
 
-La solución final que implementamos fue incluir un "_end of file_" en el TAD del semáforo. Por lo tanto, el proceso aplicación modificara este "_end of file_" cuando allá terminado de trabajar con todos los archivos disponibles, y el proceso vista chequea en cada iteración antes de esperar en el semáforo si este "_end of file_" fue modificado o no.
+La solución final que implementamos fue enviar desde el proceso **app** un **EOF** (string vacío) de manera tal que cuando el proceso **vista** reciba dicho string vea que su longitud es nula y sale del ciclo de ejecución.
 
 ### Punteros en memoria compartida
 
