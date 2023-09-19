@@ -38,15 +38,13 @@ int main(int argc, char *argv[]) {
 	// espero para que se conecte la view
 	sleep(2);
 
-	char send[BUF_SIZE + 10];
-	int pid, len;
+	int len;
 
 	while (has_next_file(sm)) {
 		char buf[BUF_SIZE] = {0};
-		pid = ret_file(sm, buf);
-		len = sprintf(send, "%i  %s", pid, buf);
-		sm_write(shm, send, len);
-		fprintf(out, "%s\n", send);
+		len = ret_file(sm, buf);
+		sm_write(shm, buf, len);
+		fprintf(out, "%s\n", buf);
 	}
 
 	// send EOF and destroy

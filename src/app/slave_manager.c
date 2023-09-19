@@ -185,7 +185,7 @@ int ret_file(SlaveManager adt, char* buf) {
 	adt->av_slaves -= 1;
 	adt->ret_files += 1;
 
-	int read_bytes = read(adt->fd_read[idx], buf, BUF_SIZE - 2);
+	int read_bytes = read(adt->fd_read[idx], buf, BUF_SIZE);
 
 	int i = 0;
 	for (i = 0; i < read_bytes && buf[i] != '\n'; i++)
@@ -197,7 +197,7 @@ int ret_file(SlaveManager adt, char* buf) {
 	if (adt->qfiles_sent < adt->qfiles && adt->active_files[idx] == 0)
 		_send_file(adt, idx);
 
-	return adt->slave_pids[idx];  // pid del esclavo
+	return i;  // cantidad de bytes
 }
 
 static void _send_file(SlaveManager adt, int idx) {
