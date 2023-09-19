@@ -15,11 +15,14 @@ int main(int argc, char *argv[]) {
 		ERROR_EXIT("setvbuf/stdout");
 
 	char filepath[BUF_SIZE];
-	char output[BUF_SIZE];
+	char output[BUF_SIZE - 10];
+	char send[BUF_SIZE];
+	int pid = getpid();
 
 	while (fgets(filepath, sizeof(filepath), stdin) != NULL) {
 		md5(filepath, output, sizeof(output));
-		write(STDOUT_FILENO, output, BUF_SIZE - 2);
+		snprintf(send, sizeof(send), "%d  %s", pid, output);
+		write(STDOUT_FILENO, send, BUF_SIZE);
 	}
 
 	return 0;
